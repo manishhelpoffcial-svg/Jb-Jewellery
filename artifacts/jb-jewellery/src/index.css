@@ -91,3 +91,17 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Expand container to fill wide desktop screens */
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1440px;
+  }
+}
+@media (min-width: 1440px) {
+  .container {
+    max-width: 100%;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
