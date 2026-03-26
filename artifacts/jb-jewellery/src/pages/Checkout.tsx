@@ -26,11 +26,12 @@ const INDIAN_STATES = [
 ];
 
 export default function Checkout() {
-  const { items, cartTotal, clearCart } = useCart() as ReturnType<typeof useCart> & { clearCart?: () => void };
+  const { items, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const [step, setStep] = useState<Step>('address');
   const [loading, setLoading] = useState(false);
+  const [orderError, setOrderError] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponError, setCouponError] = useState('');
@@ -75,31 +76,38 @@ export default function Checkout() {
   const handlePlaceOrder = async () => {
     if (!user) return;
     setLoading(true);
-    const orderId = generateOrderId();
-    const order: Order = {
-      orderId,
-      userId: user.uid,
-      customerName: user.name,
-      phone: address.phone,
-      email: user.email,
-      items,
-      address,
-      subtotal,
-      shipping,
-      tax,
-      discount: couponDiscount,
-      couponCode: couponCode.toUpperCase(),
-      grandTotal,
-      status: 'pending',
-      statusHistory: [{ status: 'pending', time: new Date().toISOString() }],
-      whatsappSent: false,
-      createdAt: new Date().toISOString(),
-    };
-    const savedOrder = await saveOrder(order);
-    const message = buildWhatsAppMessage(savedOrder);
-    openWhatsApp(message);
-    navigate(`/order-success?orderId=${savedOrder.orderId}`);
-    setLoading(false);
+    setOrderError('');
+    try {
+      const orderId = generateOrderId();
+      const order: Order = {
+        orderId,
+        userId: user.uid,
+        customerName: user.name,
+        phone: address.phone,
+        email: user.email,
+        items,
+        address,
+        subtotal,
+        shipping,
+        tax,
+        discount: couponDiscount,
+        couponCode: couponCode.toUpperCase(),
+        grandTotal,
+        status: 'pending',
+        statusHistory: [{ status: 'pending', time: new Date().toISOString() }],
+        whatsappSent: false,
+        createdAt: new Date().toISOString(),
+      };
+      const savedOrder = await saveOrder(order);
+      clearCart();
+      const message = buildWhatsAppMessage(savedOrder);
+      openWhatsApp(message);
+      navigate(`/order-success?orderId=${savedOrder.orderId}`);
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0) {
@@ -279,6 +287,12 @@ export default function Checkout() {
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-sm text-yellow-800">
                     💡 <strong>How it works:</strong> After clicking the button below, WhatsApp will open with your complete order details. Simply send the message to place your order!
                   </div>
+
+                  {orderError && (
+                    <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                      {orderError}
+                    </div>
+                  )}
 
                   <button
                     onClick={handlePlaceOrder}
