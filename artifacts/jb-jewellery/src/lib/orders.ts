@@ -88,7 +88,7 @@ ${order.address.city}, ${order.address.state} - ${order.address.pincode}
   return msg;
 }
 
-const WA_NUMBER = '919999999999';
+const WA_NUMBER = '917432920601';
 
 export function openWhatsApp(message: string) {
   window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
