@@ -36,7 +36,7 @@ export function HeroSlider() {
               <img 
                 src={src} 
                 alt={`JB Jewellery Banner ${index + 1}`} 
-                className="w-full h-[200px] sm:h-[300px] md:h-[420px] lg:h-[560px] xl:h-[650px] object-cover"
+                className="w-full h-auto object-contain block"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1599643478514-4a884f1b4a60?w=1920&q=80`;
                 }}
