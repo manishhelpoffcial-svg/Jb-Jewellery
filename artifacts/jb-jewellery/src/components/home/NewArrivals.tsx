@@ -10,7 +10,7 @@ export function NewArrivals() {
       <div className="container mx-auto px-4">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-black text-gray-900 mb-1">New Arrivals</h2>
+            <h2 className="text-3xl lg:text-4xl font-black text-gray-900 mb-1">New Arrivals</h2>
             <p className="text-gray-600 font-medium text-sm">Fresh drops, every week 💛</p>
           </div>
           <a href="#" className="hidden sm:flex text-black font-bold text-sm hover:text-primary transition-colors items-center gap-1">
@@ -18,7 +18,7 @@ export function NewArrivals() {
           </a>
         </div>
 
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar pb-6 snap-x lg:grid lg:grid-cols-3 xl:grid-cols-3 lg:overflow-visible lg:pb-0">
+        <div className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto hide-scrollbar pb-6 snap-x lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0">
           {newProducts.map(p => (
             <div key={p.id} className="w-[200px] sm:w-[240px] shrink-0 snap-start lg:w-auto">
               <ProductCard product={p} />

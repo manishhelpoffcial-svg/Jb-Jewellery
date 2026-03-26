@@ -23,7 +23,7 @@ export function Bestsellers() {
       <div className="container mx-auto px-4">
         
         {/* Banner */}
-        <div className="w-full h-[120px] sm:h-[180px] rounded-2xl overflow-hidden mb-12 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative">
+        <div className="w-full h-[120px] sm:h-[180px] lg:h-[300px] xl:h-[340px] rounded-2xl overflow-hidden mb-12 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative">
           <img 
             src={`${import.meta.env.BASE_URL}images/hero-banner-2.png`} 
             alt="Bestsellers" 
@@ -36,7 +36,7 @@ export function Bestsellers() {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-3xl font-black text-gray-900 mb-2">Bestsellers</h2>
+            <h2 className="text-3xl lg:text-4xl font-black text-gray-900 mb-2">Bestsellers</h2>
             <p className="text-gray-500 font-medium text-sm">Styles that everyone is loving right now.</p>
           </div>
           <a href="#" className="text-primary font-bold text-sm hover:underline flex items-center gap-1">
@@ -62,7 +62,7 @@ export function Bestsellers() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {finalProducts.map(p => (
             <ProductCard key={p.id} product={{...p, isBestseller: true}} />
           ))}
