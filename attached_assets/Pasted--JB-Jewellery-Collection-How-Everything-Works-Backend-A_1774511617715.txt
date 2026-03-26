@@ -1,0 +1,994 @@
+
+## JB Jewellery Collection
+### How Everything Works | Backend | Admin Panel | Checkout
+
+---
+
+# 📌 PART 1 — HOW THE WEBSITE WORKS
+## (Full User Journey)
+
+---
+
+## 👤 NEW VISITOR JOURNEY
+
+```
+1. User visits jbjewellery.com
+   ↓
+2. Sees Homepage (Estallo style)
+   - Marquee bar
+   - Navbar with search
+   - Hero banner slider
+   - All sections
+   ↓
+3. Browses products
+   - Clicks category
+   - Uses search
+   - Applies filters
+   ↓
+4. Clicks product card
+   - Opens Product Detail Page
+   - Sees images, price, description
+   ↓
+5. Clicks "Add to Cart"
+   - If NOT logged in → Login popup appears
+   - If logged in → Added to cart drawer
+   ↓
+6. Goes to checkout
+   - Fills address
+   - Reviews order
+   - Clicks WhatsApp button
+   ↓
+7. WhatsApp opens with full order message
+   ↓
+8. Order saved to Firebase
+   ↓
+9. Order success page shown
+   ↓
+10. Invoice PDF available to download
+    Email sent to customer
+    Email alert sent to admin
+```
+
+---
+
+## 🔄 COMPLETE FLOW DIAGRAM
+
+```
+HOMEPAGE
+    │
+    ├── Search Bar ──────────────→ Search Results Page
+    │                                      │
+    ├── Category Click ──────────→ Category Page
+    │                                      │
+    ├── Product Card Click ──────→ Product Detail Page
+    │                                      │
+    │              ┌────────────────────────┘
+    │              ↓
+    │         Add to Cart
+    │              │
+    │         Not Logged In? ────→ Login / Signup Page
+    │              │                      │
+    │              │◄─────────────────────┘
+    │              ↓
+    │         Cart Drawer Opens
+    │              │
+    │         Click Checkout
+    │              │
+    │         ┌────▼────────────────────┐
+    │         │  CHECKOUT FLOW (4 steps) │
+    │         │  1. Login Check          │
+    │         │  2. Address Form         │
+    │         │  3. Order Summary        │
+    │         │  4. WhatsApp Button      │
+    │         └────┬────────────────────┘
+    │              │
+    │         WhatsApp Opens
+    │              │
+    │         Admin Receives Message
+    │              │
+    │         Admin Clicks Admin Panel Link
+    │              │
+    │         Admin Accepts / Declines
+    │              │
+    │    ┌─────────┴──────────┐
+    │    ↓                    ↓
+    │ ACCEPTED            DECLINED
+    │    │                    │
+    │ Customer gets       Customer gets
+    │ Confirm WhatsApp    Cancel WhatsApp
+    │    │
+    │ Order Status Updates
+    │ (Processing → Shipped → Delivered)
+    │    │
+    │ Customer tracks on website
+```
+
+---
+
+# 📌 PART 2 — FIREBASE BACKEND SYSTEM
+
+---
+
+## 🔥 FIREBASE SETUP
+
+```
+Project Name: jb-jewellery-collection
+Services to enable:
+  ✅ Firebase Authentication
+  ✅ Cloud Firestore
+  ✅ Firebase Storage
+  ✅ Firebase Hosting
+
+Config file: src/firebase/config.js
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+}
+```
+
+---
+
+## 🗄️ FIRESTORE DATABASE STRUCTURE
+
+### Collection 1 — USERS
+```
+users/
+  └── {userId}/
+        ├── uid: "abc123"
+        ├── name: "Priya Sharma"
+        ├── email: "priya@gmail.com"
+        ├── phone: "9876543210"
+        ├── role: "user" or "admin"
+        ├── createdAt: timestamp
+        └── addresses: [
+              {
+                id: "addr1",
+                fullName: "Priya Sharma",
+                phone: "9876543210",
+                line1: "123 MG Road",
+                line2: "Flat 4B",
+                city: "Mumbai",
+                state: "Maharashtra",
+                pincode: "400001",
+                isDefault: true
+              }
+            ]
+```
+
+### Collection 2 — PRODUCTS
+```
+products/
+  └── {productId}/
+        ├── id: "PRD001"
+        ├── name: "Pearl Drop Earrings"
+        ├── category: "earrings"
+        ├── mrp: 899
+        ├── discount: 44
+        ├── finalPrice: 504
+        ├── images: [
+              "https://firebase.../image1.jpg",
+              "https://firebase.../image2.jpg"
+            ]
+        ├── description: "Beautiful pearl..."
+        ├── material: "Gold plated brass"
+        ├── careInstructions: "Keep dry..."
+        ├── stock: 50
+        ├── ratings: 4.8
+        ├── reviewCount: 124
+        ├── tags: ["bestseller", "new"]
+        ├── isActive: true
+        └── createdAt: timestamp
+```
+
+### Collection 3 — ORDERS
+```
+orders/
+  └── {orderId}/
+        ├── orderId: "JB2025001"
+        ├── userId: "abc123"
+        ├── customerName: "Priya Sharma"
+        ├── phone: "9876543210"
+        ├── email: "priya@gmail.com"
+        ├── items: [
+              {
+                productId: "PRD001",
+                name: "Pearl Drop Earrings",
+                image: "url",
+                mrp: 899,
+                finalPrice: 504,
+                qty: 2,
+                total: 1008
+              }
+            ]
+        ├── address: {
+              fullName: "Priya Sharma",
+              line1: "123 MG Road",
+              line2: "Flat 4B",
+              city: "Mumbai",
+              state: "Maharashtra",
+              pincode: "400001",
+              phone: "9876543210"
+            }
+        ├── subtotal: 1807
+        ├── shipping: 50
+        ├── tax: 90
+        ├── discount: 200
+        ├── grandTotal: 1747
+        ├── couponCode: "JBFIRST"
+        ├── status: "pending"
+        ├── statusHistory: [
+              {status: "pending", time: timestamp},
+              {status: "confirmed", time: timestamp},
+              {status: "shipped", time: timestamp}
+            ]
+        ├── whatsappSent: true
+        ├── invoiceUrl: "url"
+        └── createdAt: timestamp
+```
+
+### Collection 4 — CART
+```
+cart/
+  └── {userId}/
+        └── items: [
+              {
+                productId: "PRD001",
+                name: "Pearl Earrings",
+                image: "url",
+                mrp: 899,
+                finalPrice: 504,
+                qty: 2
+              }
+            ]
+```
+
+### Collection 5 — WISHLIST
+```
+wishlist/
+  └── {userId}/
+        └── items: [
+              {
+                productId: "PRD001",
+                name: "Pearl Earrings",
+                image: "url",
+                finalPrice: 504
+              }
+            ]
+```
+
+### Collection 6 — COUPONS
+```
+coupons/
+  └── {couponCode}/
+        ├── code: "JBFIRST"
+        ├── type: "percentage" or "flat"
+        ├── value: 50
+        ├── minOrderAmount: 299
+        ├── maxDiscount: 200
+        ├── expiryDate: timestamp
+        ├── usageLimit: 1000
+        ├── usedCount: 342
+        └── isActive: true
+```
+
+### Collection 7 — REVIEWS
+```
+reviews/
+  └── {reviewId}/
+        ├── productId: "PRD001"
+        ├── userId: "abc123"
+        ├── userName: "Priya S."
+        ├── rating: 5
+        ├── comment: "Amazing quality!"
+        ├── isVerified: true
+        └── createdAt: timestamp
+```
+
+---
+
+## 🔐 FIREBASE AUTH SYSTEM
+
+```
+SIGNUP FLOW:
+1. User fills name, email, phone, password
+2. createUserWithEmailAndPassword(email, password)
+3. Get uid from response
+4. Save to Firestore:
+   users/{uid} = {name, email, phone,
+                  role: "user", createdAt}
+5. Set auth context
+6. Redirect to homepage
+
+LOGIN FLOW:
+1. User fills email, password
+2. signInWithEmailAndPassword(email, password)
+3. Get user data from Firestore users/{uid}
+4. Set auth context with user data
+5. Redirect to previous page
+
+ADMIN LOGIN:
+1. Login with email/password
+2. Check Firestore users/{uid}.role === "admin"
+3. If admin → go to /admin dashboard
+4. If not admin → redirect to homepage
+   Show error: "Access Denied"
+
+PROTECTED ROUTES:
+Cart, Checkout, Profile,
+My Orders → require login
+Admin pages → require role === "admin"
+
+FORGOT PASSWORD:
+sendPasswordResetEmail(email)
+→ Firebase sends reset link automatically
+```
+
+---
+
+## 📦 FIREBASE STORAGE STRUCTURE
+
+```
+Firebase Storage Buckets:
+
+/products/
+  └── {productId}/
+        ├── image1.jpg
+        ├── image2.jpg
+        └── image3.jpg
+
+/banners/
+  ├── hero-1.jpg
+  ├── hero-2.jpg
+  └── special-offer.jpg
+
+/invoices/
+  └── {orderId}/
+        └── invoice-JB2025001.pdf
+
+/categories/
+  ├── earrings.jpg
+  ├── necklaces.jpg
+  └── rings.jpg
+```
+
+---
+
+# 📌 PART 3 — CHECKOUT SYSTEM (DETAILED)
+
+---
+
+## 💬 WHATSAPP CHECKOUT — FULL CODE FLOW
+
+```
+STEP 1: User clicks "Place Order on WhatsApp"
+
+STEP 2: System does this automatically:
+
+  a) Generate unique Order ID:
+     "JB" + year + random 4 digits
+     Example: JB2025-4821
+
+  b) Build order object:
+     {
+       orderId, userId, customerName,
+       phone, email, items, address,
+       subtotal, shipping, tax,
+       discount, grandTotal,
+       status: "pending",
+       createdAt: now,
+       whatsappSent: false
+     }
+
+  c) Save order to Firestore:
+     orders/{orderId} = orderObject
+
+  d) Generate WhatsApp message:
+     (see message format below)
+
+  e) Encode message for URL:
+     encodeURIComponent(message)
+
+  f) Open WhatsApp:
+     window.open(
+       `https://wa.me/91XXXXXXXXXX
+       ?text=${encodedMessage}`
+     )
+
+  g) Update order:
+     whatsappSent: true
+
+  h) Clear cart from Firestore
+
+  i) Redirect to /order-success
+
+  j) Send email notifications
+```
+
+---
+
+## 📱 COMPLETE WHATSAPP MESSAGE FORMAT
+
+```
+🛍️ *JB JEWELLERY COLLECTION — NEW ORDER*
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔖 *Order ID:* #JB2025-4821
+🕐 *Date:* 26 Mar 2025 | 4:30 PM
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 *CUSTOMER DETAILS*
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name:    Priya Sharma
+Phone:   +91 98765 43210
+Email:   priya@gmail.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 *ORDER ITEMS*
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+1️⃣ Pearl Drop Earrings
+   🆔 PRD001 | Qty: 2 | ₹504 each
+   Subtotal: ₹1,008
+
+2️⃣ Gold Chain Necklace
+   🆔 PRD002 | Qty: 1 | ₹799 each
+   Subtotal: ₹799
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 *PRICE BREAKDOWN*
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+MRP Total:       ₹2,396
+Discount:         -₹200
+Coupon (JBFIRST): -₹149
+Subtotal:        ₹1,807
+Shipping:            ₹50
+Tax (5%):            ₹90
+──────────────────────────
+*💛 GRAND TOTAL: ₹1,747*
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 *DELIVERY ADDRESS*
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Priya Sharma
+123 MG Road, Flat 4B
+Mumbai, Maharashtra - 400001
+📞 +91 98765 43210
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ *ADMIN PANEL — QUICK ACTIONS*
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 *Open Order in Admin:*
+https://jbjewellery.com/admin/orders/JB2025-4821
+
+✅ *ACCEPT ORDER:*
+Reply → ACCEPT JB2025-4821
+
+❌ *DECLINE ORDER:*
+Reply → DECLINE JB2025-4821
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+💛 JB Jewellery Collection
+📷 Instagram | 👤 Facebook
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## ✅ ACCEPT / DECLINE ORDER SYSTEM
+
+```
+WHEN ADMIN REPLIES "ACCEPT JB2025-4821":
+
+System does:
+1. Find order JB2025-4821 in Firestore
+2. Update status: "pending" → "confirmed"
+3. Add to statusHistory array
+4. Send WhatsApp to customer:
+
+   "✅ *Order Confirmed! 🎉*
+   
+   Hi Priya! Your JB Jewellery
+   order #JB2025-4821 is CONFIRMED!
+   
+   💰 Amount: ₹1,747
+   📦 Items: 3 products
+   
+   We'll process & ship it soon!
+   
+   Track your order:
+   jbjewellery.com/order/JB2025-4821
+   
+   Questions? Reply here anytime 💛
+   — JB Jewellery Team"
+
+5. Send confirmation email to customer
+6. Admin panel order status updates live
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+WHEN ADMIN REPLIES "DECLINE JB2025-4821":
+
+System does:
+1. Find order in Firestore
+2. Update status: "pending" → "cancelled"
+3. Send WhatsApp to customer:
+
+   "❌ *Order Update*
+   
+   Hi Priya, unfortunately your
+   order #JB2025-4821 could not
+   be processed right now.
+   
+   Reason: Item out of stock /
+           Address unclear /
+           Other issue
+   
+   Please contact us to reorder:
+   wa.me/91XXXXXXXXXX
+   
+   Sorry for the inconvenience 🙏
+   — JB Jewellery Team"
+
+4. Send cancellation email
+5. Admin panel updates live
+```
+
+---
+
+# 📌 PART 4 — ADMIN PANEL (DETAILED)
+
+---
+
+## 🔐 ADMIN LOGIN
+
+```
+Route: /admin/login
+
+UI:
+┌────────────────────────────┐
+│   JB Jewellery             │
+│   Admin Panel              │
+│                            │
+│   Email: [___________]     │
+│   Password: [___________]  │
+│                            │
+│   [Login to Admin] 🔑      │
+└────────────────────────────┘
+
+Logic:
+1. signInWithEmailAndPassword
+2. Check Firestore: role === "admin"
+3. Yes → redirect /admin
+4. No → show "Access Denied"
+   Sign out immediately
+```
+
+---
+
+## 📊 ADMIN DASHBOARD
+
+```
+Route: /admin
+
+Layout: Sidebar + Main Content
+
+SIDEBAR MENU:
+📊 Dashboard
+📦 Orders
+🛍️ Products
+👥 Customers
+🏷️ Coupons
+📈 Analytics
+⚙️ Settings
+🚪 Logout
+
+DASHBOARD MAIN:
+
+Row 1 — Stats Cards:
+┌──────────┬──────────┬──────────┬──────────┐
+│📦 Orders │💰 Revenue│👥 Customers│🛍️ Products│
+│  1,204   │ ₹45,230  │  8,432   │  342     │
+│+12 today │+₹5,230   │+45 new   │ 8 low stk│
+└──────────┴──────────┴──────────┴──────────┘
+
+Row 2 — Charts:
+Left: Revenue last 7 days (bar chart)
+Right: Orders by category (pie chart)
+
+Row 3 — Recent Orders Table:
+┌────────────────────────────────────────────┐
+│ Order ID  │ Customer │ Total │Status│Action │
+│ JB2025001 │ Priya S. │ ₹1747 │🟡Pend│[View] │
+│ JB2025002 │ Sneha K. │ ₹899  │🟢Conf│[View] │
+│ JB2025003 │ Riya M.  │ ₹2100 │🔵Ship│[View] │
+└────────────────────────────────────────────┘
+
+Row 4 — Alerts:
+⚠️ Low Stock: Pearl Earrings (3 left)
+⚠️ Low Stock: Gold Choker (2 left)
+```
+
+---
+
+## 📦 ORDER MANAGEMENT
+
+```
+Route: /admin/orders
+
+FILTER BAR:
+[All] [Pending🟡] [Confirmed🔵]
+[Processing🟠] [Shipped🟣]
+[Delivered🟢] [Cancelled🔴]
+
+Search: by Order ID or Customer name
+
+ORDERS TABLE:
+┌──────────────────────────────────────────────────┐
+│Order ID│Date    │Customer│Items│Total │Status│Act│
+│JB4821  │26 Mar  │Priya S.│  3  │₹1747 │🟡Pend│ ⋮ │
+│JB4820  │26 Mar  │Sneha K.│  1  │₹504  │🟢Conf│ ⋮ │
+└──────────────────────────────────────────────────┘
+
+Action menu (⋮):
+- 👁️ View Full Order
+- ✅ Accept Order
+- ❌ Decline Order
+- 📦 Mark Processing
+- 🚚 Mark Shipped
+- ✅ Mark Delivered
+- 💬 WhatsApp Customer
+- 📄 Download Invoice
+
+ORDER DETAIL PAGE (/admin/orders/:id):
+
+┌──────────────────────────────────────┐
+│ ORDER #JB2025-4821          [Print] │
+│ 26 March 2025 | 4:30 PM            │
+├──────────────────────────────────────┤
+│ STATUS TIMELINE:                     │
+│ ✅Ordered → ✅Confirmed →            │
+│ 📦Processing → 🚚Shipped →           │
+│ ✅Delivered                          │
+│                                      │
+│ [Update Status ▼] dropdown           │
+├──────────────────────────────────────┤
+│ CUSTOMER:                            │
+│ Priya Sharma                         │
+│ priya@gmail.com | 9876543210        │
+│ [WhatsApp Customer] button           │
+├──────────────────────────────────────┤
+│ ORDER ITEMS:                         │
+│ [img] Pearl Earrings x2    ₹1,008   │
+│ [img] Gold Necklace  x1    ₹799     │
+├──────────────────────────────────────┤
+│ PRICE:                               │
+│ Subtotal:  ₹1,807                   │
+│ Shipping:     ₹50                   │
+│ Tax:          ₹90                   │
+│ Discount:   -₹200                   │
+│ TOTAL:     ₹1,747                   │
+├──────────────────────────────────────┤
+│ DELIVERY ADDRESS:                    │
+│ 123 MG Road, Flat 4B                │
+│ Mumbai, MH - 400001                 │
+├──────────────────────────────────────┤
+│ [Download Invoice PDF]               │
+│ [Send Status Update to Customer]     │
+└──────────────────────────────────────┘
+```
+
+---
+
+## 🛍️ PRODUCT MANAGEMENT
+
+```
+Route: /admin/products
+
+PRODUCTS TABLE:
+┌────────────────────────────────────────────┐
+│[img]│Name        │Cat    │Price│Stock│Act  │
+│ 🖼  │Pearl Earring│Earring│₹504 │ 50  │✏️🗑️│
+│ 🖼  │Gold Necklace│Necklac│₹799 │  3⚠️│✏️🗑️│
+└────────────────────────────────────────────┘
+
+[+ Add New Product] yellow button top right
+
+ADD/EDIT PRODUCT FORM:
+┌──────────────────────────────────────────┐
+│ Product Name: [_____________________]    │
+│                                          │
+│ Category: [Earrings ▼]                  │
+│                                          │
+│ MRP Price: ₹[_____]                     │
+│ Discount %: [___]%                       │
+│ Final Price: ₹[auto-calculated]          │
+│                                          │
+│ Stock Qty: [____]                        │
+│                                          │
+│ Description:                             │
+│ [_________________________________]      │
+│ [_________________________________]      │
+│                                          │
+│ Material: [_____________________]        │
+│ Care Instructions: [_____________]       │
+│                                          │
+│ Product Images:                          │
+│ [📤 Upload Images] (Firebase Storage)    │
+│ Preview: [img1] [img2] [img3]           │
+│                                          │
+│ Tags: [✅New] [⬜Bestseller]             │
+│       [⬜Featured] [⬜Sale]              │
+│                                          │
+│ Status: [🟢 Active ▼]                   │
+│                                          │
+│ [Cancel]  [Save Product ✅]              │
+└──────────────────────────────────────────┘
+
+LOGIC:
+- finalPrice = mrp - (mrp × discount/100)
+- Images upload to Firebase Storage
+- URL saved to Firestore product
+- Stock goes red if below 5
+- Delete shows confirmation modal
+```
+
+---
+
+## 👥 CUSTOMER MANAGEMENT
+
+```
+Route: /admin/customers
+
+CUSTOMERS TABLE:
+┌────────────────────────────────────────────┐
+│Name    │Email        │Phone     │Orders│Act│
+│Priya S.│priya@g.com  │987654321 │  5   │👁️ │
+│Sneha K.│sneha@g.com  │876543210 │  2   │👁️ │
+└────────────────────────────────────────────┘
+
+CUSTOMER DETAIL:
+- Profile info
+- All orders list
+- Total spent
+- [WhatsApp Customer] button
+```
+
+---
+
+## 🏷️ COUPON MANAGEMENT
+
+```
+Route: /admin/coupons
+
+COUPONS TABLE:
+┌─────────────────────────────────────────┐
+│Code    │Type  │Value│MinOrder│Expiry│Act│
+│JBFIRST │50%   │50%  │₹299    │31Dec │🗑️ │
+│FLAT100  │Flat  │₹100 │₹599    │30Jun │🗑️ │
+└─────────────────────────────────────────┘
+
+CREATE COUPON FORM:
+- Coupon Code: [JBFIRST]
+- Type: [Percentage % ▼] or [Flat ₹]
+- Discount Value: [50]
+- Min Order Amount: ₹[299]
+- Max Discount: ₹[200]
+- Expiry Date: [31/12/2025]
+- Usage Limit: [1000]
+- [Create Coupon] yellow button
+```
+
+---
+
+# 📌 PART 5 — INVOICE PDF SYSTEM
+
+```
+Library: jsPDF + html2canvas
+Trigger: After order success
+
+INVOICE LAYOUT:
+┌─────────────────────────────────────┐
+│ ████ JB JEWELLERY COLLECTION  LOGO  │
+│      Fashion Jewellery              │
+│      📞 91XXXXXXXXXX                │
+│      📷 @jbjewellery               │
+├─────────────────────────────────────┤
+│ TAX INVOICE                         │
+│ Invoice No: INV-JB2025-4821         │
+│ Date: 26 March 2025                 │
+│ Order ID: JB2025-4821               │
+├─────────────────────────────────────┤
+│ BILL TO:                            │
+│ Priya Sharma                        │
+│ 123 MG Road, Flat 4B               │
+│ Mumbai, Maharashtra - 400001        │
+│ Phone: 9876543210                   │
+│ Email: priya@gmail.com              │
+├─────────────────────────────────────┤
+│ # │ Item          │Qty│Rate  │Total │
+│ 1 │ Pearl Earrings│ 2 │₹504  │₹1008 │
+│ 2 │ Gold Necklace │ 1 │₹799  │₹799  │
+├─────────────────────────────────────┤
+│              Subtotal:    ₹1,807    │
+│              Shipping:       ₹50    │
+│              Tax (5%):       ₹90    │
+│              Discount:     -₹200    │
+│              ─────────────────      │
+│              GRAND TOTAL: ₹1,747    │
+├─────────────────────────────────────┤
+│ Payment: WhatsApp Order             │
+│ Status: Confirmed ✅                │
+├─────────────────────────────────────┤
+│  Thank you for shopping with JB! 💛 │
+│  For queries: wa.me/91XXXXXXXXXX    │
+│  Visit: jbjewellery.com             │
+└─────────────────────────────────────┘
+
+Filename: invoice-JB2025-4821.pdf
+Download from:
+  - Order Success Page
+  - My Orders Page
+  - Admin Panel Order Detail
+```
+
+---
+
+# 📌 PART 6 — EMAIL NOTIFICATIONS
+
+```
+Service: EmailJS + Zoho Mail SMTP
+
+ZOHO MAIL SETUP:
+- Create account at zoho.com/mail
+- Domain email: orders@jbjewellery.com
+- Connect to EmailJS
+- Use EmailJS in React (no backend needed)
+
+EMAIL 1 — CUSTOMER ORDER CONFIRMATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+From: orders@jbjewellery.com
+To: customer email
+Subject: "Your JB Jewellery Order
+          #JB2025-4821 is Confirmed! 🎉"
+
+Body (HTML email):
+- Yellow header with JB logo
+- "Hi Priya! Thank you for your order 💛"
+- Order ID + Date
+- Items table (image, name, qty, price)
+- Price breakdown
+- Delivery address
+- [Track Your Order] yellow button
+  → links to jbjewellery.com/order/JB2025-4821
+- [Download Invoice] button
+- WhatsApp support number
+- Social media links
+- Footer: © 2025 JB Jewellery Collection
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EMAIL 2 — ADMIN NEW ORDER ALERT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+From: orders@jbjewellery.com
+To: admin@jbjewellery.com
+Subject: "🛍️ New Order #JB2025-4821 — ₹1,747"
+
+Body:
+- NEW ORDER RECEIVED alert header
+- Order ID + Date + Time
+- Customer: Priya Sharma | 9876543210
+- Items: 3 products
+- Grand Total: ₹1,747
+- [Open in Admin Panel] yellow button
+  → links to /admin/orders/JB2025-4821
+- [WhatsApp Customer] green button
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EMAIL 3 — ORDER STATUS UPDATE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sent when admin updates status
+Subject: "Your JB Order #JB2025-4821
+          has been [Status]!"
+Body: Status update + tracking info
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+# 📌 PART 7 — SECURITY RULES
+
+```
+FIRESTORE RULES:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    // Users: only own data
+    match /users/{userId} {
+      allow read, write:
+        if request.auth.uid == userId;
+    }
+
+    // Products: anyone can read
+    // only admin can write
+    match /products/{productId} {
+      allow read: if true;
+      allow write:
+        if request.auth != null &&
+        get(/users/$(request.auth.uid))
+        .data.role == 'admin';
+    }
+
+    // Orders: user sees own orders
+    // admin sees all
+    match /orders/{orderId} {
+      allow read:
+        if request.auth.uid ==
+        resource.data.userId ||
+        get(/users/$(request.auth.uid))
+        .data.role == 'admin';
+      allow create:
+        if request.auth != null;
+      allow update:
+        if get(/users/$(request.auth.uid))
+        .data.role == 'admin';
+    }
+
+    // Cart & Wishlist: only own
+    match /cart/{userId} {
+      allow read, write:
+        if request.auth.uid == userId;
+    }
+
+    match /wishlist/{userId} {
+      allow read, write:
+        if request.auth.uid == userId;
+    }
+
+    // Coupons: anyone can read
+    // admin can write
+    match /coupons/{code} {
+      allow read: if true;
+      allow write:
+        if get(/users/$(request.auth.uid))
+        .data.role == 'admin';
+    }
+  }
+}
+```
+
+---
+
+# ✅ COMPLETE SYSTEM SUMMARY
+
+```
+USER DOES THIS:          SYSTEM DOES THIS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signs up              → Firebase Auth + Firestore save
+Browses products      → Reads from Firestore
+Adds to cart          → Saves to Firestore cart
+Applies coupon        → Validates in Firestore coupons
+Places order          → Saves to Firestore orders
+                      → Opens WhatsApp with message
+                      → Sends email to customer
+                      → Sends alert to admin
+                      → Clears cart
+Admin receives msg    → Clicks admin panel link
+Admin views order     → Reads from Firestore
+Admin accepts         → Updates Firestore status
+                      → WhatsApp sent to customer
+                      → Email sent to customer
+Admin marks shipped   → Updates status + history
+                      → Notification to customer
+Customer tracks order → Reads status from Firestore
+Customer downloads    → jsPDF generates invoice
+  invoice               from order data
+```
+
+---
+
+ 

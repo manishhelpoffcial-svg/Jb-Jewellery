@@ -4,6 +4,38 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
+## JB Jewellery Collection — `artifacts/jb-jewellery`
+
+Full-stack e-commerce site for JB Jewellery Collection built with React + Vite.
+
+### Features
+- **Homepage**: Marquee, Hero Slider, Category Rows, JB Exclusive, Shop Your Vibe (vibe-1.png–vibe-5.png), Bestsellers, New Arrivals, ShopUnderBudget, ComboDeals, Reviews, TrustBadges (animated GIFs)
+- **Auth**: Firebase Auth + localStorage fallback (demo mode). AuthContext with login/signup/logout/resetPassword. AuthModal with login/signup/forgot-password tabs
+- **Cart**: CartContext with clearCart, CartDrawer with checkout button → /checkout
+- **Checkout**: 3-step (Address → Review → WhatsApp) with coupon codes (JBFIRST/FLAT100/WELCOME20), tax (5%), and free shipping above ₹399
+- **Orders**: WhatsApp message builder, localStorage order storage, invoice PDF via jsPDF
+- **Admin Panel** (`/admin`): Dashboard with recharts, Orders management, Products CRUD, Customers view, Coupons management
+- **My Orders** (`/my-orders`): Order history with status timeline, PDF invoice download, WhatsApp support
+
+### Tech Stack
+- React + Vite + TypeScript
+- Tailwind CSS + shadcn/ui components
+- Framer Motion (animations)
+- Firebase Auth + Firestore (optional; falls back to localStorage)
+- jsPDF (invoice generation)
+- Recharts (admin dashboard charts)
+- wouter (routing)
+
+### Key Constants to Update
+- `src/lib/orders.ts` → `WA_NUMBER = '919999999999'` (replace with real WhatsApp number)
+- Firebase env vars: `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, etc.
+
+### Demo Mode (no Firebase)
+- Login with any email containing "admin" → admin role
+- Orders stored in localStorage `jb-orders`
+- Users stored in localStorage `jb-user`
+- Cart stored in localStorage `jb-cart`
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces

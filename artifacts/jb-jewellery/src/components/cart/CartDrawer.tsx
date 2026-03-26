@@ -1,19 +1,23 @@
-import React, { useState } from 'react';
-import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
+import React from 'react';
+import { X, Minus, Plus, ShoppingBag, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
+import { useLocation } from 'wouter';
 
 export function CartDrawer() {
   const { items, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, cartTotal } = useCart();
-  const [couponCode, setCouponCode] = useState('');
+  const { user, openAuthModal } = useAuth();
+  const [, navigate] = useLocation();
 
   const handleCheckout = () => {
-    const text = `Hi! I want to order from JB Jewellery:\n\n` + 
-      items.map(item => `- ${item.name} (${item.quantity}x) - ${formatPrice(item.price * item.quantity)}`).join('\n') +
-      `\n\nTotal Amount: ${formatPrice(cartTotal)}`;
-    
-    window.open(`https://wa.me/919999999999?text=${encodeURIComponent(text)}`, '_blank');
+    setIsCartOpen(false);
+    if (!user) {
+      openAuthModal('login');
+      return;
+    }
+    navigate('/checkout');
   };
 
   return (
@@ -115,31 +119,27 @@ export function CartDrawer() {
             {/* Footer */}
             {items.length > 0 && (
               <div className="border-t border-gray-100 bg-gray-50 p-6 space-y-4">
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="Enter Coupon Code" 
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-primary"
-                  />
-                  <button className="px-4 py-2 bg-black text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors">
-                    Apply
-                  </button>
-                </div>
-                
-                <div className="flex items-center justify-between text-lg font-bold text-gray-900 pt-2">
+                <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>Subtotal</span>
+                  <span>{formatPrice(cartTotal)}</span>
+                </div>
+                {cartTotal < 399 && (
+                  <div className="text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+                    Add {formatPrice(399 - cartTotal)} more for FREE shipping! 🚚
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-lg font-bold text-gray-900">
+                  <span>Total</span>
                   <span>{formatPrice(cartTotal)}</span>
                 </div>
 
                 <button 
                   onClick={handleCheckout}
-                  className="w-full py-4 bg-[#25D366] text-white font-bold rounded-xl shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-primary text-black font-bold rounded-xl hover:bg-yellow-400 hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
                 >
-                  Checkout on WhatsApp 🟢
+                  Proceed to Checkout <ChevronRight className="w-4 h-4" />
                 </button>
-                <p className="text-[10px] text-center text-gray-500">Secure checkout via WhatsApp. No payment required right now.</p>
+                <p className="text-[10px] text-center text-gray-500">Apply coupons & pay via WhatsApp at checkout.</p>
               </div>
             )}
           </motion.div>

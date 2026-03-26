@@ -13,36 +13,28 @@ import { SpecialOffer } from '@/components/home/SpecialOffer';
 import { ComboDeals } from '@/components/home/ComboDeals';
 import { Reviews } from '@/components/home/Reviews';
 import { TrustBadges } from '@/components/home/TrustBadges';
-import { CartDrawer } from '@/components/cart/CartDrawer';
-import { CartProvider } from '@/context/CartContext';
-import { WishlistProvider } from '@/context/WishlistContext';
 
 export default function Home() {
   return (
-    <CartProvider>
-      <WishlistProvider>
-        <div className="min-h-screen flex flex-col w-full relative">
-          <Marquee />
-          <Navbar />
-          
-          <main className="flex-1">
-            <HeroSlider />
-            <CategoryRow />
-            <JbExclusive />
-            <ShopYourVibe />
-            <Bestsellers />
-            <ShopUnderBudget />
-            <NewArrivals />
-            <SpecialOffer />
-            <ComboDeals />
-            <Reviews />
-            <TrustBadges />
-          </main>
-          
-          <Footer />
-          <CartDrawer />
-        </div>
-      </WishlistProvider>
-    </CartProvider>
+    <div className="min-h-screen flex flex-col w-full relative">
+      <Marquee />
+      <Navbar />
+      
+      <main className="flex-1">
+        <HeroSlider />
+        <CategoryRow />
+        <JbExclusive />
+        <ShopYourVibe />
+        <Bestsellers />
+        <ShopUnderBudget />
+        <NewArrivals />
+        <SpecialOffer />
+        <ComboDeals />
+        <Reviews />
+        <TrustBadges />
+      </main>
+      
+      <Footer />
+    </div>
   );
 }

@@ -10,6 +10,7 @@ interface CartContextType {
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
   cartCount: number;
@@ -46,6 +47,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(current => current.filter(item => item.id !== productId));
   };
 
+  const clearCart = () => {
+    setItems([]);
+    localStorage.removeItem('jb-cart');
+  };
+
   const updateQuantity = (productId: string, quantity: number) => {
     if (quantity < 1) return removeFromCart(productId);
     setItems(current =>
@@ -58,7 +64,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CartContext.Provider value={{
-      items, addToCart, removeFromCart, updateQuantity,
+      items, addToCart, removeFromCart, updateQuantity, clearCart,
       isCartOpen, setIsCartOpen, cartCount, cartTotal
     }}>
       {children}
