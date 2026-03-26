@@ -1,0 +1,1043 @@
+
+## JB Jewellery Collection
+### Complete E-Commerce Website — Estallo Style
+### White & Yellow Theme | WhatsApp Checkout | Firebase Backend | Admin Panel
+
+---
+
+## 🎯 PROJECT OVERVIEW
+
+Build a complete professional e-commerce website exactly like **estailofashion.com** in layout and structure. Brand name is **JB Jewellery Collection** (short: **JB**). Niche is artificial/fashion jewellery. Color theme is **White & Yellow only**. Checkout is via **WhatsApp**. Backend is **Firebase**. Admin panel is fully included.
+
+---
+
+## 🎨 DESIGN SYSTEM
+
+```
+Primary Yellow:     #FFD700
+Dark Yellow:        #E6C200
+Light Yellow BG:    #FFFBE6
+Pale Yellow:        #FFF8DC
+White:              #FFFFFF
+Black Text:         #111111
+Gray Text:          #666666
+Light Gray Card:    #F5F5F5
+Border:             #EEEEEE
+Green (discount):   #22C55E
+Font:               Poppins (300,400,500,600,700,800,900)
+```
+
+---
+
+## 📁 FOLDER STRUCTURE
+
+```
+jb-jewellery/
+├── public/
+│   └── images/
+│       ├── banners/
+│       │   ├── hero-banner-1.png (No Tarnish Just Sparkle)
+│       │   ├── hero-banner-2.png (Bestsellers That Slay)
+│       │   ├── hero-banner-3.png (Buy Any 6 @ 499)
+│       │   ├── hero-banner-4.png (Buy Any 8 @ 597)
+│       │   ├── hero-banner-5.png (Buy Any 10 @ 999)
+│       │   └── special-offer.png (Don't Miss Your Special Offer)
+│       ├── categories/
+│       │   ├── earrings.png
+│       │   ├── necklaces.png
+│       │   ├── bracelets.png
+│       │   ├── rings.png
+│       │   └── hair-accessories.png
+│       ├── budget/
+│       │   ├── under-99.png
+│       │   ├── under-199.png
+│       │   ├── under-299.png
+│       │   └── under-499.png
+│       └── vibe/
+│           └── boss-babe.png
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── context/
+│   ├── firebase/
+│   ├── admin/
+│   └── utils/
+```
+
+---
+
+## 🔝 SECTION 1 — MARQUEE ANNOUNCEMENT BAR
+
+```
+Background: #FFD700 (Yellow)
+Text: #111111 (Black) Bold 12px
+Animation: Infinite left scroll marquee
+
+Content (repeating):
+🚚 Free Shipping Above ₹399  |
+💛 New Collection Just Dropped  |
+Use Code JBFIRST for 50% OFF  |
+⭐ Rated 4.9 by 10,000+ Customers  |
+🎁 Free Gift on Orders Above ₹999  |
+```
+
+---
+
+## 🔝 SECTION 2 — NAVBAR
+
+### Row 1:
+```
+LEFT:
+- Logo: "JB" bold black 28px
+- Below: "Jewellery Collection" yellow 11px
+
+CENTER:
+- Wide search bar rounded
+- Placeholder: "Search for jewellery..."
+- Right: Yellow "Search" button
+
+RIGHT (icons with labels):
+- 👤 Account / Login
+- 🤍 Wishlist + count badge
+- 🛒 Cart + count badge
+```
+
+### Row 2 — Category Nav:
+```
+Home | New Arrivals | Earrings | Necklaces |
+Chokers | Bracelets | Rings | Anklets |
+Hair Accessories | Combo Deals | Sale 🔥
+
+Style:
+- White background
+- Yellow bottom border 2px
+- Active: yellow underline thick
+- Hover: yellow underline
+- Font: 13px 500 weight
+- Scrollable on mobile
+```
+
+---
+
+## 🦸 SECTION 3 — HERO BANNER SLIDER
+
+```
+USE YOUR UPLOADED IMAGES:
+
+Slide 1: hero-banner-1.png
+→ "NO TARNISH. JUST SPARKLE" + Shop Now button
+
+Slide 2: hero-banner-2.png
+→ "BESTSELLERS THAT SLAY!" + Shop Now button
+
+Slide 3: hero-banner-3.png
+→ "BUY ANY 6 @ ₹499 + FLAT 10% OFF"
+→ Use Code: FLAT10 + Shop Now button
+
+Slide 4: hero-banner-4.png
+→ "BUY ANY 8 @ ₹597 + FLAT 10% OFF"
+→ Use Code: FLAT10 + Shop Now button
+
+Slide 5: hero-banner-5.png
+→ "BUY ANY 10 @ ₹999 + FREE JEWELLERY ORGANISER"
+→ Shop Now button
+
+Settings:
+- Full width, height 420px desktop / 200px mobile
+- Auto-slide every 3 seconds
+- Left/Right arrow buttons (white circle black arrow)
+- Dot indicators bottom center
+- Smooth slide transition
+```
+
+---
+
+## 🗂️ SECTION 4 — CATEGORY ICON ROW
+
+```
+USE YOUR UPLOADED IMAGES as backgrounds:
+
+Row of 6 clickable category cards:
+
+1. earrings.png     → Label: "Earrings"
+2. necklaces.png    → Label: "Necklaces"
+3. rings.png        → Label: "Rings"
+4. bracelets.png    → Label: "Bracelets"
+5. hair-accessories.png → Label: "Hair Accessories"
+6. [Gift Hampers image] → Label: "Gift Hampers"
+
+Style each card:
+- Square image with rounded corners 12px
+- Label below in bold 12px black
+- Hover: scale up + yellow border
+- Horizontally scrollable on mobile
+- On click: scroll to section or go to category page
+```
+
+---
+
+## ⭐ SECTION 5 — JB EXCLUSIVE
+
+```
+Header:
+- Left: "JB Exclusive" bold 18px
+- Right: "View All →" yellow link
+
+Filter Tabs:
+[All] [Trending] [New] [Bestseller] [Combo]
+- Active: yellow bg black text rounded pill
+- Inactive: white bg gray border rounded pill
+
+Product Row:
+- Horizontal scroll
+- Show 6 products at a time desktop
+- Each card: (see PRODUCT CARD spec below)
+```
+
+---
+
+## 🎭 SECTION 6 — SHOP YOUR VIBE
+
+```
+USE YOUR UPLOADED IMAGES:
+
+Title: "Shop Your Vibe" bold left
+
+3 Cards side by side:
+
+Card 1: boss-babe.png
+→ "BOSS BABE BASIC"
+→ Subtitle: "Minimal, Mindful, Made To Impress"
+→ Button: "Shop Now" black
+
+Card 2: [Glam Girl image - use yellow dark bg]
+→ "GLAM GIRL"
+→ Subtitle: "Turn heads everywhere"
+→ Button: "Shop Now" yellow
+
+Card 3: [Every Slay image - use light yellow bg]
+→ "EVERY DAY SLAY"
+→ Subtitle: "Jewellery for every mood"
+→ Button: "Shop Now" black
+
+Card style:
+- Equal width, height 280px
+- Rounded 12px
+- Hover: scale 1.02
+- Image fills card with text overlay
+```
+
+---
+
+## 🏆 SECTION 7 — BESTSELLERS
+
+```
+USE: hero-banner-2.png (Bestsellers That Slay) as top banner
+
+Header: "Bestsellers" bold + "View All" yellow right
+
+Category Filter Tabs (scrollable):
+[Earrings] [Necklaces] [Chokers]
+[Bracelets] [Rings] [Hair Accessories]
+
+Grid: 4 columns desktop / 2 columns mobile
+Card: Standard product card (see spec)
+Badge: Black "BESTSELLER" pill top left
+```
+
+---
+
+## 💰 SECTION 8 — SHOP UNDER BUDGET
+
+```
+USE YOUR UPLOADED IMAGES EXACTLY:
+
+Title: "Shop Under Budget" bold
+
+4 cards in a row:
+
+Card 1: under-99.png  → Under ₹99
+Card 2: under-199.png → Under ₹199
+Card 3: under-299.png → Under ₹299
+Card 4: under-499.png → Under ₹499
+
+Style:
+- Use the actual uploaded images as card backgrounds
+- Rounded corners 16px
+- Hover: slight shadow lift
+- On click: filter products by max price range
+- Horizontally scrollable on mobile
+```
+
+---
+
+## 🆕 SECTION 9 — NEW ARRIVALS
+
+```
+Header: "New Arrivals" bold left + "View All" yellow right
+Subtitle: "Fresh drops, every week 💛"
+
+Layout: Horizontal scroll product row
+Badge: Yellow "NEW" pill on every card
+Product card: Standard spec
+```
+
+---
+
+## 🎁 SECTION 10 — SPECIAL OFFER BANNER
+
+```
+USE: special-offer.png (Don't Miss Your Special Offer)
+
+Full width banner with image
+Text overlay:
+- "DON'T MISS YOUR SPECIAL OFFER" bold yellow
+- "Because a queen like you deserves to feel extra special!"
+- 3 offer cards shown:
+  ✦ Premium Cardboard Box (Above ₹1599)
+  ✦ Special Surprise Gift (Above ₹1599)
+  ✦ Earrings Set (Above ₹1599)
+- "Shop Now" yellow button
+```
+
+---
+
+## 💎 SECTION 11 — COMBO DEALS BANNERS
+
+```
+USE YOUR UPLOADED IMAGES:
+
+3 full-width banners stacked or in slider:
+
+Banner 1: hero-banner-3.png
+→ BUY ANY 6 @ ₹499 + FLAT 10% OFF
+→ Use Code: FLAT10
+→ "Shop Now" yellow button
+
+Banner 2: hero-banner-4.png
+→ BUY ANY 8 @ ₹597 + FLAT 10% OFF
+→ Use Code: FLAT10
+→ "Shop Now" yellow button
+
+Banner 3: hero-banner-5.png
+→ BUY ANY 10 @ ₹999
+→ FREE JEWELLERY ORGANISER WORTH ₹1299
+→ "Shop Now" yellow button
+```
+
+---
+
+## 🎀 SECTION 12 — HAIR ACCESSORIES
+
+```
+USE: hair-accessories.png as section banner image
+
+Header: "Hair Accessories" bold + "View All" yellow
+Horizontal scroll product row
+Same product card style
+```
+
+---
+
+## 💍 SECTION 13 — RINGS
+
+```
+USE: rings.png as section banner image
+
+Header: "Rings" bold + "View All" yellow
+Horizontal scroll product row
+```
+
+---
+
+## 💪 SECTION 14 — BRACELETS
+
+```
+USE: bracelets.png as section banner image
+
+Header: "Bracelets" bold + "View All" yellow
+Horizontal scroll product row
+```
+
+---
+
+## 🎁 SECTION 15 — GIFT HAMPERS
+
+```
+USE: gift-hampers.png as banner
+
+Full width banner
+Title: "GIFT HAMPERS"
+Subtitle: "Perfect gifts for your loved ones"
+Yellow "Shop Now" button
+```
+
+---
+
+## ⭐ SECTION 16 — CUSTOMER REVIEWS
+
+```
+Title: "What Our Customers Say" center bold
+
+Google Rating Badge:
+- G logo yellow
+- "4.9" big bold
+- ⭐⭐⭐⭐⭐
+- "Based on 2,400+ reviews"
+
+4 Review Cards horizontal scroll:
+Card style:
+- White bg, yellow left border 4px
+- Round avatar yellow bg with initial letter
+- Customer name bold
+- ⭐⭐⭐⭐⭐ yellow
+- Review text italic gray 3 lines
+- "✅ Verified Buyer" green small badge
+
+Review content:
+1. Riya S. — "Amazing quality! My necklace still shines after 6 months. Love JB!"
+2. Priya M. — "Best earrings I ever bought. Super fast delivery too 💛"
+3. Sneha K. — "Ordered the combo deal, got free gift too! Totally worth it."
+4. Ananya R. — "The hair accessories are gorgeous. Will order again for sure!"
+```
+
+---
+
+## 🦶 SECTION 17 — FOOTER
+
+```
+TOP FOOTER — Yellow #FFD700:
+- "JB" big bold centered black
+- "Jewellery Collection" below yellow-dark
+- Tagline: "Fashion Jewellery for Every Occasion 💛"
+- Social icons (black circles):
+  📷 Instagram | 👤 Facebook | 💬 WhatsApp | ▶️ YouTube
+
+MAIN FOOTER — White:
+4 columns:
+
+Column 1 — JB Jewellery:
+- About 2-3 lines
+- Trust badges (Free Shipping, Easy Returns, Authentic)
+
+Column 2 — Quick Links:
+Home | Shop | New Arrivals | Combo Deals
+Sale | About | Contact | Blog
+
+Column 3 — Shop By Category:
+Earrings | Necklaces | Chokers | Bracelets
+Rings | Anklets | Hair Accessories | Gift Hampers
+
+Column 4 — Help & Support:
+💬 WhatsApp Us
+↩️ Return Policy
+🚚 Shipping Info
+📦 Track Order
+❓ FAQ
+🔒 Privacy Policy
+
+Payment Icons Row:
+UPI | Visa | Mastercard | COD | WhatsApp Pay
+
+BOTTOM BAR — Light gray:
+"© 2025 JB Jewellery Collection. All Rights Reserved."
+Privacy Policy | Terms | Refund Policy
+```
+
+---
+
+## 🛒 PRODUCT CARD — EXACT SPEC
+
+```
+┌──────────────────────────┐
+│[NEW/SALE badge] [❤️] [%] │
+│                          │
+│    PRODUCT IMAGE         │
+│    (square, gray bg)     │
+│                          │
+├──────────────────────────┤
+│ Product Name Bold        │
+│ (2 lines max, 13px)      │
+│ ⭐⭐⭐⭐⭐ (124 reviews)  │
+│ ~~₹899~~ ₹504 44% off   │
+├──────────────────────────┤
+│   [ Add to Cart 🛒 ]     │
+│  (yellow full width btn) │
+└──────────────────────────┘
+
+On hover:
+- Slight box shadow
+- Scale 1.01
+- Yellow border appears
+- Heart icon visible
+```
+
+---
+
+## 🛍️ CART DRAWER
+
+```
+Trigger: Click cart icon in navbar
+Style: Slides in from RIGHT side
+Overlay: Dark semi-transparent
+
+Inside drawer:
+┌─────────────────────────┐
+│ 🛒 My Cart (2 items) ✕  │
+├─────────────────────────┤
+│ [img] Product Name      │
+│       ₹504              │
+│       [−] [2] [+]  [✕] │
+├─────────────────────────┤
+│ [img] Product Name      │
+│       ₹799              │
+│       [−] [1] [+]  [✕] │
+├─────────────────────────┤
+│ Coupon: [_______] Apply │
+├─────────────────────────┤
+│ Subtotal:      ₹1,303   │
+│                         │
+│ [Checkout on WhatsApp🟢]│
+│   [Continue Shopping]   │
+└─────────────────────────┘
+```
+
+---
+
+## 💬 WHATSAPP CHECKOUT — 4 STEPS
+
+### Step 1 — Login Check
+```
+If not logged in:
+→ Show login/signup modal
+→ After login: proceed to Step 2
+```
+
+### Step 2 — Delivery Address Form
+```
+Fields:
+- Full Name *
+- Phone Number *
+- Address Line 1 *
+- Address Line 2
+- City *
+- State *
+- Pincode *
+- [Save this address] checkbox
+- [Continue] yellow button
+```
+
+### Step 3 — Order Summary Page
+```
+Show all cart items:
+- Image | Name | Qty | Price
+
+Price Breakdown:
+- Subtotal: ₹X
+- Shipping: ₹50 (Free above ₹999)
+- Tax 5%: ₹X
+- Coupon Discount: -₹X
+─────────────────────
+GRAND TOTAL: ₹X
+
+Delivery Address shown
+[Edit Address] link
+
+[Place Order on WhatsApp 🟢] BIG YELLOW BUTTON
+```
+
+### Step 4 — WhatsApp Message Auto-Generated
+```
+🛍️ *JB Jewellery Collection — NEW ORDER*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+🔖 *Order ID:* #JB2025001
+🕐 *Date & Time:* 26 Mar 2025, 4:30 PM
+
+━━━━━━━━━━━━━━━━━━━━━━━
+👤 *CUSTOMER DETAILS*
+━━━━━━━━━━━━━━━━━━━━━━━
+Name:   [Customer Name]
+Phone:  [Phone Number]
+Email:  [Email Address]
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📦 *ORDER ITEMS*
+━━━━━━━━━━━━━━━━━━━━━━━
+1. [Product Name]
+   ID: PRD001 | Qty: 2 | ₹504
+
+2. [Product Name]
+   ID: PRD002 | Qty: 1 | ₹799
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💰 *PRICE SUMMARY*
+━━━━━━━━━━━━━━━━━━━━━━━
+Subtotal:       ₹1,807
+Shipping:          ₹50
+Tax (5%):          ₹90
+Discount:        -₹200
+─────────────────────
+*GRAND TOTAL:   ₹1,747*
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📍 *DELIVERY ADDRESS*
+━━━━━━━━━━━━━━━━━━━━━━━
+[Full Name]
+[Address Line 1], [Line 2]
+[City], [State] - [Pincode]
+📞 [Phone]
+
+━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ *ADMIN ACTIONS*
+━━━━━━━━━━━━━━━━━━━━━━━
+🔗 *View Order in Admin Panel:*
+https://jbjewellery.com/admin/orders/JB2025001
+
+✅ To ACCEPT → Reply: ACCEPT JB2025001
+❌ To DECLINE → Reply: DECLINE JB2025001
+
+💛 JB Jewellery Collection
+```
+
+```
+Opens: wa.me/91XXXXXXXXXX?text=[encoded message]
+Saves order to: Firebase Firestore
+Redirects to: /order-success page
+```
+
+---
+
+## ✅ ORDER SUCCESS PAGE
+
+```
+Animation: Confetti or sparkle CSS animation
+Content:
+- ✅ Big green checkmark
+- "Order Placed Successfully!"
+- "Your order #JB2025001 has been sent on WhatsApp"
+- "Our team will confirm your order shortly 💛"
+
+3 buttons:
+1. [Download Invoice PDF]
+2. [View My Orders]
+3. [Continue Shopping]
+```
+
+---
+
+## 🔥 FIREBASE BACKEND
+
+### Collections:
+
+```
+users/
+  uid, name, email, phone,
+  createdAt, addresses[], role
+
+products/
+  id, name, category, mrp,
+  discount, finalPrice, images[],
+  description, material, stock,
+  ratings, reviewCount, tags[],
+  isActive, createdAt
+
+orders/
+  orderId, userId, customerName,
+  phone, email, items[], address,
+  subtotal, shipping, tax,
+  discount, grandTotal,
+  status (pending/confirmed/
+          processing/shipped/
+          delivered/cancelled),
+  whatsappSent, createdAt
+
+cart/
+  userId, items[{productId,
+  name, image, price, mrp, qty}]
+
+wishlist/
+  userId, items[{productId,
+  name, image, price}]
+
+coupons/
+  code, type, value,
+  minOrder, expiry, isActive
+
+reviews/
+  productId, userId, userName,
+  rating, comment, createdAt
+```
+
+---
+
+## ⚙️ ADMIN PANEL
+
+### Route: `/admin`
+
+### Admin Login Page:
+```
+- Email + Password
+- Only role === "admin" users access
+- Redirect others to homepage
+```
+
+### Admin Dashboard `/admin`:
+```
+Stats Cards Row:
+┌──────────┬──────────┬──────────┬──────────┐
+│ 📦       │ 💰       │ 👥       │ 🛍️       │
+│ Total    │ Revenue  │ Customers│ Products │
+│ Orders   │ Today    │ Total    │ Active   │
+│ 1,204    │ ₹45,230  │ 8,432    │ 342      │
+└──────────┴──────────┴──────────┴──────────┘
+
+Recent Orders Table:
+Order ID | Customer | Items | Total | Status | Action
+
+Revenue Chart: Last 7 days bar chart
+Top Products: Most ordered list
+Low Stock Alerts: Products below 5 stock
+```
+
+### Admin Orders `/admin/orders`:
+```
+Table columns:
+Order ID | Date | Customer | Phone |
+Items Count | Total | Status | Actions
+
+Filter: All | Pending | Confirmed |
+        Processing | Shipped | Delivered | Cancelled
+
+Each row Actions:
+- [View] → opens order detail modal
+- [Update Status] dropdown
+- [WhatsApp Customer] quick link
+
+Order Detail Modal:
+- Full order info
+- All items with images
+- Price breakdown
+- Delivery address
+- Status update dropdown
+- [Send Status Update] button
+- [Download Invoice] button
+- [WhatsApp Customer] button
+```
+
+### Admin Products `/admin/products`:
+```
+Table: Image | Name | Category |
+       MRP | Final Price | Stock |
+       Status | Actions
+
+Actions per product:
+- ✏️ Edit
+- 🗑️ Delete (with confirmation)
+- 👁️ Toggle active/inactive
+
+Add/Edit Product Form:
+- Product Name *
+- Category dropdown *
+- MRP Price *
+- Discount % → auto calculates Final Price
+- Final Price (auto-calculated, editable)
+- Description *
+- Material / Care Instructions
+- Stock Quantity *
+- Upload Images (multiple, to Firebase Storage)
+- Tags: [New] [Bestseller] [Featured] [Sale]
+- Status: Active / Inactive
+- [Save Product] yellow button
+```
+
+### Admin Customers `/admin/customers`:
+```
+Table: Name | Email | Phone |
+       Orders | Total Spent | Joined | Actions
+
+Actions:
+- View Profile
+- View Order History
+- WhatsApp Customer
+```
+
+### Admin Coupons `/admin/coupons`:
+```
+Table: Code | Type | Value |
+       Min Order | Expiry | Status | Actions
+
+Create Coupon Form:
+- Code (e.g. JBFIRST)
+- Type: Flat ₹ / Percentage %
+- Discount Value
+- Minimum Order Amount
+- Expiry Date
+- [Create] yellow button
+```
+
+### Admin WhatsApp Order Response:
+```
+When admin receives WhatsApp order:
+
+If admin replies: ACCEPT JB2025001
+→ System updates order status to "Confirmed"
+→ Customer receives WhatsApp message:
+  "✅ Your JB Jewellery order #JB2025001
+   has been CONFIRMED! 🎉
+   We'll ship it soon. Track at:
+   jbjewellery.com/order/JB2025001"
+
+If admin replies: DECLINE JB2025001
+→ System updates order status to "Cancelled"
+→ Customer receives WhatsApp message:
+  "❌ Sorry, your order #JB2025001
+   could not be processed.
+   Contact us: wa.me/91XXXXXXXXXX"
+```
+
+---
+
+## 📄 INVOICE PDF
+
+```
+Generate using: jsPDF + html2canvas
+
+Invoice includes:
+┌─────────────────────────────────┐
+│ JB Jewellery Collection    [Logo]│
+│ Fashion Jewellery               │
+├─────────────────────────────────┤
+│ INVOICE                         │
+│ Invoice No: INV-JB2025001       │
+│ Date: 26 March 2025             │
+├─────────────────────────────────┤
+│ Bill To:                        │
+│ [Customer Name]                 │
+│ [Address]                       │
+│ [Phone] [Email]                 │
+├─────────────────────────────────┤
+│ # | Item | Qty | Price | Total  │
+│ 1 | Pearl Earrings | 2 | 504    │
+│ 2 | Gold Necklace | 1 | 799     │
+├─────────────────────────────────┤
+│ Subtotal:           ₹1,807      │
+│ Shipping:              ₹50      │
+│ Tax (5%):              ₹90      │
+│ Discount:            -₹200      │
+│ ─────────────────────────       │
+│ GRAND TOTAL:        ₹1,747      │
+├─────────────────────────────────┤
+│ Thank you for shopping with JB! │
+│ 💛 JB Jewellery Collection      │
+└─────────────────────────────────┘
+
+Download as: invoice-JB2025001.pdf
+Available at: Order Success + My Orders pages
+```
+
+---
+
+## 📧 EMAIL NOTIFICATIONS (Zoho Mail)
+
+### Customer Order Confirmation:
+```
+Subject: "Your JB Jewellery Order #JB2025001
+          is Confirmed! 🎉"
+
+Body:
+- JB logo header yellow
+- "Thank you [Name]! Your order is confirmed"
+- Order items table
+- Price breakdown
+- Delivery address
+- "Track your order" button
+- WhatsApp support link
+- Footer with social links
+```
+
+### Admin New Order Alert:
+```
+Subject: "🛍️ New Order Received #JB2025001 — ₹1,747"
+
+Body:
+- Order ID + Date
+- Customer details
+- Items ordered
+- Grand Total
+- "View in Admin Panel" button
+  → links to /admin/orders/JB2025001
+```
+
+---
+
+## 👤 USER ACCOUNT PAGES
+
+### My Profile `/profile`:
+```
+- Display name, email, phone
+- Edit profile form
+- Change password
+- Saved addresses list
+- Add/Edit/Delete address
+```
+
+### My Orders `/my-orders`:
+```
+Table: Order ID | Date | Items |
+       Total | Status | Actions
+
+Status badges:
+- Pending: yellow
+- Confirmed: blue
+- Processing: orange
+- Shipped: purple
+- Delivered: green
+- Cancelled: red
+
+Actions: View Detail | Download Invoice
+```
+
+### Order Detail `/order/:id`:
+```
+- Order ID, date
+- All items with images
+- Price breakdown
+- Delivery address
+- Order status timeline:
+  ✅ Ordered → ✅ Confirmed →
+  📦 Processing → 🚚 Shipped →
+  ✅ Delivered
+- Download Invoice button
+```
+
+---
+
+## 🔐 AUTH PAGES
+
+### Signup `/signup`:
+```
+- Full Name
+- Email
+- Phone Number
+- Password
+- Confirm Password
+- [Create Account] yellow button
+- Link to Login
+Firebase: createUserWithEmailAndPassword
+Save to Firestore: users collection
+```
+
+### Login `/login`:
+```
+- Email
+- Password
+- Forgot Password link
+- [Login] yellow button
+- Link to Signup
+Firebase: signInWithEmailAndPassword
+```
+
+### Forgot Password:
+```
+- Email input
+- [Send Reset Link] button
+Firebase: sendPasswordResetEmail
+```
+
+---
+
+## 📱 ALL PAGES & ROUTES
+
+```
+/ ..................... Homepage
+/shop ................. All Products
+/category/:name ....... Category Page
+/product/:id .......... Product Detail
+/search?q= ............ Search Results
+/cart ................. Cart Page
+/wishlist ............. Wishlist Page
+/checkout ............. Checkout Steps
+/order-success ........ Order Confirmed
+/login ................ Login
+/signup ............... Signup
+/profile .............. My Profile
+/my-orders ............ Order History
+/order/:id ............ Order Detail
+/admin/login .......... Admin Login
+/admin ................ Admin Dashboard
+/admin/orders ......... All Orders
+/admin/orders/:id ..... Order Detail
+/admin/products ....... Product Management
+/admin/customers ...... Customer Management
+/admin/coupons ........ Coupon Management
+* ..................... 404 Not Found
+```
+
+---
+
+## 🛠️ COMPLETE TECH STACK
+
+```
+Frontend:     React.js
+Styling:      Tailwind CSS
+Routing:      React Router DOM v6
+State:        Context API + useReducer
+Backend:      Firebase
+Database:     Cloud Firestore
+Auth:         Firebase Authentication
+Storage:      Firebase Storage
+Orders:       WhatsApp wa.me API link
+PDF:          jsPDF + html2canvas
+Email:        EmailJS + Zoho SMTP
+Charts:       Recharts
+Icons:        Lucide React
+Fonts:        Google Fonts (Poppins)
+Hosting:      Firebase Hosting
+```
+
+---
+
+## 📱 WHATSAPP NUMBER
+
+```
+Replace everywhere: 91XXXXXXXXXX
+With your actual number: 91[your number]
+Format: Country code + number, no spaces, no +
+Example: 919876543210
+```
+
+---
+
+## ✅ FINAL CHECKLIST
+
+```
+✅ Estallo-style layout exact clone
+✅ White & Yellow theme throughout
+✅ All your uploaded images used
+✅ Hero slider with 5 banners
+✅ Category icons with your images
+✅ Budget section ₹99/₹199/₹299/₹499
+✅ Combo deal banners
+✅ Special offer banner
+✅ Vibe section (Boss Babe etc)
+✅ Cart drawer slide-in
+✅ WhatsApp checkout 4 steps
+✅ Auto WhatsApp order message
+✅ Admin panel link in message
+✅ Accept/Decline order system
+✅ Firebase backend complete
+✅ Admin panel full featured
+✅ Invoice PDF generation
+✅ Email notifications Zoho
+✅ User account pages
+✅ Order tracking timeline
+✅ Fully mobile responsive
+✅ 404 page
+✅ Loading skeletons
+✅ Toast notifications
+✅ Coupon system
+✅ Wishlist system
+✅ Product reviews & ratings
+✅ Search & filter system
+```
