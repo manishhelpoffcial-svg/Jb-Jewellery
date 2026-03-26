@@ -42,9 +42,20 @@ export function ProductCard({ product }: ProductCardProps) {
         <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
       </button>
 
-      {/* Image Area (Placeholder) */}
+      {/* Image Area */}
       <div className="aspect-square bg-gradient-to-br from-[#FFFBE6] to-[#FFF0B3] relative flex items-center justify-center overflow-hidden">
-        <span className="text-6xl font-black text-black/10 group-hover:scale-110 transition-transform duration-500">
+        {product.image ? (
+          <img
+            src={`${import.meta.env.BASE_URL}images/${product.image}`}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+        ) : null}
+        <span className={`text-6xl font-black text-black/10 group-hover:scale-110 transition-transform duration-500 absolute ${product.image ? 'hidden' : ''}`}>
           {product.name.charAt(0)}
         </span>
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />

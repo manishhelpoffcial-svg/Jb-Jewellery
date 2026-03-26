@@ -12,6 +12,7 @@ import { NewArrivals } from '@/components/home/NewArrivals';
 import { SpecialOffer } from '@/components/home/SpecialOffer';
 import { ComboDeals } from '@/components/home/ComboDeals';
 import { Reviews } from '@/components/home/Reviews';
+import { TrustBadges } from '@/components/home/TrustBadges';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
@@ -35,6 +36,7 @@ export default function Home() {
             <SpecialOffer />
             <ComboDeals />
             <Reviews />
+            <TrustBadges />
           </main>
           
           <Footer />

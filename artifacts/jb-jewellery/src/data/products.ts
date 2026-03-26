@@ -7,16 +7,17 @@ export interface Product {
   category: string;
   rating: number;
   reviews: number;
+  image?: string;
   isNew?: boolean;
   isBestseller?: boolean;
 }
 
 export const products: Product[] = [
-  { id: "1", name: "Pearl Drop Earrings", price: 299, originalPrice: 599, discount: 50, category: "Earrings", rating: 4.8, reviews: 124, isBestseller: true },
-  { id: "2", name: "Gold Hoop Earrings", price: 199, originalPrice: 399, discount: 50, category: "Earrings", rating: 4.9, reviews: 89, isBestseller: true },
-  { id: "3", name: "Layered Necklace Set", price: 499, originalPrice: 899, discount: 44, category: "Necklaces", rating: 4.7, reviews: 201, isBestseller: true },
-  { id: "4", name: "Butterfly Hair Clips Set", price: 149, originalPrice: 299, discount: 50, category: "Hair Accessories", rating: 4.8, reviews: 67, isNew: true },
-  { id: "5", name: "Floral Finger Ring", price: 99, originalPrice: 199, discount: 50, category: "Rings", rating: 4.6, reviews: 45, isNew: true },
+  { id: "1", name: "Pearl Drop Earrings", price: 299, originalPrice: 599, discount: 50, category: "Earrings", rating: 4.8, reviews: 124, image: "product-1.png", isBestseller: true },
+  { id: "2", name: "Gold Hoop Earrings", price: 199, originalPrice: 399, discount: 50, category: "Earrings", rating: 4.9, reviews: 89, image: "product-2.png", isBestseller: true },
+  { id: "3", name: "Layered Necklace Set", price: 499, originalPrice: 899, discount: 44, category: "Necklaces", rating: 4.7, reviews: 201, image: "product-3.png", isBestseller: true },
+  { id: "4", name: "Butterfly Hair Clips Set", price: 149, originalPrice: 299, discount: 50, category: "Hair Accessories", rating: 4.8, reviews: 67, image: "product-4.png", isNew: true },
+  { id: "5", name: "Floral Finger Ring", price: 99, originalPrice: 199, discount: 50, category: "Rings", rating: 4.6, reviews: 45, image: "product-5.png", isNew: true },
   { id: "6", name: "Gold Chain Bracelet", price: 249, originalPrice: 499, discount: 50, category: "Bracelets", rating: 4.9, reviews: 156, isBestseller: true },
   { id: "7", name: "Diamond Choker Necklace", price: 399, originalPrice: 799, discount: 50, category: "Necklaces", rating: 4.8, reviews: 98, isBestseller: true },
   { id: "8", name: "Star Stud Earrings", price: 149, originalPrice: 299, discount: 50, category: "Earrings", rating: 4.7, reviews: 112 },
