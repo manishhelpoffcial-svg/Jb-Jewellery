@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Package, ArrowLeft, Download, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '@/context/AuthContext';
-import { getLocalOrders, Order, openWhatsApp } from '@/lib/orders';
+import { getMyOrders, Order, openWhatsApp } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
 import jsPDF from 'jspdf';
 
@@ -23,7 +23,7 @@ export default function MyOrders() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) setOrders(getLocalOrders(user.uid));
+    if (user) getMyOrders(user.uid).then(setOrders);
   }, [user]);
 
   const downloadInvoice = (order: Order) => {

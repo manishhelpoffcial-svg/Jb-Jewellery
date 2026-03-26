@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Package, TrendingUp, Users, ShoppingBag, Clock, CheckCircle, Truck, AlertTriangle } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { getAllLocalOrders, Order } from '@/lib/orders';
+import { getAllOrders, Order } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
 import { Link } from 'wouter';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    setOrders(getAllLocalOrders());
+    getAllOrders().then(setOrders);
   }, []);
 
   const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.grandTotal, 0);

@@ -1,14 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  User as FirebaseUser,
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured } from '@/firebase/config';
+import { api, type ApiUser } from '@/lib/api';
 
 export interface JBUser {
   uid: string;
@@ -33,41 +24,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const LOCAL_USER_KEY = 'jb-user';
+function toJBUser(u: ApiUser): JBUser {
+  return { uid: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role as 'user' | 'admin' };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<JBUser | null>(() => {
-    const saved = localStorage.getItem(LOCAL_USER_KEY);
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState<JBUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<'login' | 'signup'>('login');
 
   useEffect(() => {
-    if (!isFirebaseConfigured || !auth) {
-      setLoading(false);
-      return;
-    }
-    const unsub = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser && db) {
-        try {
-          const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (snap.exists()) {
-            const data = snap.data() as JBUser;
-            setUser(data);
-            localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(data));
-          }
-        } catch {
-          // offline mode
-        }
-      } else if (!firebaseUser) {
-        setUser(null);
-        localStorage.removeItem(LOCAL_USER_KEY);
-      }
-      setLoading(false);
-    });
-    return unsub;
+    const token = localStorage.getItem('jb-token');
+    if (!token) { setLoading(false); return; }
+    api.auth.me()
+      .then(({ user: u }) => setUser(toJBUser(u)))
+      .catch(() => localStorage.removeItem('jb-token'))
+      .finally(() => setLoading(false));
   }, []);
 
   const openAuthModal = (tab: 'login' | 'signup' = 'login') => {
@@ -77,52 +50,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
   const login = async (email: string, password: string) => {
-    if (!isFirebaseConfigured) {
-      const mockUser: JBUser = {
-        uid: 'demo-user',
-        name: email.split('@')[0],
-        email,
-        phone: '',
-        role: email.includes('admin') ? 'admin' : 'user',
-      };
-      setUser(mockUser);
-      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
-      return;
-    }
-    const cred = await signInWithEmailAndPassword(auth!, email, password);
-    if (db) {
-      const snap = await getDoc(doc(db, 'users', cred.user.uid));
-      if (snap.exists()) {
-        const data = snap.data() as JBUser;
-        setUser(data);
-        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(data));
-      }
-    }
+    const { token, user: u } = await api.auth.login({ email, password });
+    localStorage.setItem('jb-token', token);
+    setUser(toJBUser(u));
   };
 
   const signup = async (name: string, email: string, phone: string, password: string) => {
-    if (!isFirebaseConfigured) {
-      const mockUser: JBUser = { uid: `local-${Date.now()}`, name, email, phone, role: 'user' };
-      setUser(mockUser);
-      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
-      return;
-    }
-    const cred = await createUserWithEmailAndPassword(auth!, email, password);
-    const newUser: JBUser = { uid: cred.user.uid, name, email, phone, role: 'user' };
-    if (db) await setDoc(doc(db, 'users', cred.user.uid), { ...newUser, createdAt: serverTimestamp() });
-    setUser(newUser);
-    localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(newUser));
+    const { token, user: u } = await api.auth.register({ name, email, phone, password });
+    localStorage.setItem('jb-token', token);
+    setUser(toJBUser(u));
   };
 
   const logout = async () => {
-    if (isFirebaseConfigured && auth) await signOut(auth);
+    localStorage.removeItem('jb-token');
     setUser(null);
-    localStorage.removeItem(LOCAL_USER_KEY);
   };
 
-  const resetPassword = async (email: string) => {
-    if (!isFirebaseConfigured || !auth) return;
-    await sendPasswordResetEmail(auth, email);
+  const resetPassword = async (_email: string) => {
+    throw new Error('Password reset not supported yet. Please contact support via WhatsApp.');
   };
 
   return (

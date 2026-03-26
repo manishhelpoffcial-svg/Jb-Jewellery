@@ -1,4 +1,5 @@
 import { CartItem } from '@/context/CartContext';
+import { api } from '@/lib/api';
 
 export interface Address {
   fullName: string;
@@ -94,10 +95,115 @@ export function openWhatsApp(message: string) {
   window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
+export async function saveOrder(order: Order): Promise<Order> {
+  try {
+    const { order: saved } = await api.orders.create({
+      customerName: order.customerName,
+      phone: order.phone,
+      email: order.email,
+      items: order.items,
+      address: order.address,
+      subtotal: order.subtotal,
+      shipping: order.shipping,
+      tax: order.tax,
+      discount: order.discount,
+      couponCode: order.couponCode,
+      grandTotal: order.grandTotal,
+    });
+    const mapped: Order = {
+      orderId: saved.id,
+      userId: saved.user_id,
+      customerName: saved.customer_name,
+      phone: saved.phone,
+      email: saved.email,
+      items: saved.items as CartItem[],
+      address: saved.address as Address,
+      subtotal: saved.subtotal,
+      shipping: saved.shipping,
+      tax: saved.tax,
+      discount: saved.discount,
+      couponCode: saved.coupon_code,
+      grandTotal: saved.grand_total,
+      status: saved.status as Order['status'],
+      statusHistory: (saved.status_history || []).map(h => ({ status: h.status, time: h.timestamp })),
+      whatsappSent: saved.whatsapp_sent,
+      createdAt: saved.created_at,
+    };
+    saveOrderLocally(mapped);
+    return mapped;
+  } catch {
+    saveOrderLocally(order);
+    return order;
+  }
+}
+
+export async function getMyOrders(userId: string): Promise<Order[]> {
+  try {
+    const { orders } = await api.orders.my();
+    return orders.map(o => ({
+      orderId: o.id,
+      userId: o.user_id,
+      customerName: o.customer_name,
+      phone: o.phone,
+      email: o.email,
+      items: o.items as CartItem[],
+      address: o.address as Address,
+      subtotal: o.subtotal,
+      shipping: o.shipping,
+      tax: o.tax,
+      discount: o.discount,
+      couponCode: o.coupon_code,
+      grandTotal: o.grand_total,
+      status: o.status as Order['status'],
+      statusHistory: (o.status_history || []).map(h => ({ status: h.status, time: h.timestamp })),
+      whatsappSent: o.whatsapp_sent,
+      createdAt: o.created_at,
+    }));
+  } catch {
+    return getLocalOrders(userId);
+  }
+}
+
+export async function getAllOrders(): Promise<Order[]> {
+  try {
+    const { orders } = await api.orders.all();
+    return orders.map(o => ({
+      orderId: o.id,
+      userId: o.user_id,
+      customerName: o.customer_name,
+      phone: o.phone,
+      email: o.email,
+      items: o.items as CartItem[],
+      address: o.address as Address,
+      subtotal: o.subtotal,
+      shipping: o.shipping,
+      tax: o.tax,
+      discount: o.discount,
+      couponCode: o.coupon_code,
+      grandTotal: o.grand_total,
+      status: o.status as Order['status'],
+      statusHistory: (o.status_history || []).map(h => ({ status: h.status, time: h.timestamp })),
+      whatsappSent: o.whatsapp_sent,
+      createdAt: o.created_at,
+    }));
+  } catch {
+    return getAllLocalOrders();
+  }
+}
+
+export async function updateOrderStatus(orderId: string, status: Order['status'], note?: string): Promise<void> {
+  try {
+    await api.orders.updateStatus(orderId, status, note);
+  } catch {
+    updateLocalOrderStatus(orderId, status);
+  }
+}
+
 export function saveOrderLocally(order: Order) {
   const existing = JSON.parse(localStorage.getItem('jb-orders') || '[]') as Order[];
-  existing.unshift(order);
-  localStorage.setItem('jb-orders', JSON.stringify(existing));
+  const filtered = existing.filter(o => o.orderId !== order.orderId);
+  filtered.unshift(order);
+  localStorage.setItem('jb-orders', JSON.stringify(filtered));
 }
 
 export function getLocalOrders(userId: string): Order[] {

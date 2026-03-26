@@ -62,6 +62,13 @@ export default defineConfig({
     port,
     host: "0.0.0.0",
     allowedHosts: true,
+    proxy: {
+      "/jb-api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/jb-api/, "/api"),
+      },
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],

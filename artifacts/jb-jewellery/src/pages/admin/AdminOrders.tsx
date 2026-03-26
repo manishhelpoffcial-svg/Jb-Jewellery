@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Package, Search, MessageCircle, Download, ChevronDown, Eye } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { getAllLocalOrders, Order, updateLocalOrderStatus, openWhatsApp } from '@/lib/orders';
+import { getAllOrders, Order, updateOrderStatus, openWhatsApp } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
 import { Link } from 'wouter';
 import jsPDF from 'jspdf';
@@ -23,7 +23,7 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [actionMenu, setActionMenu] = useState<string | null>(null);
 
-  const reload = () => setOrders(getAllLocalOrders());
+  const reload = () => getAllOrders().then(setOrders);
 
   useEffect(() => { reload(); }, []);
 
@@ -34,8 +34,8 @@ export default function AdminOrders() {
     return matchesFilter && matchesSearch;
   });
 
-  const updateStatus = (orderId: string, status: Order['status']) => {
-    updateLocalOrderStatus(orderId, status);
+  const updateStatus = async (orderId: string, status: Order['status']) => {
+    await updateOrderStatus(orderId, status);
     reload();
     setActionMenu(null);
   };

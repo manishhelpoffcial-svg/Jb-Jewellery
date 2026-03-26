@@ -5,7 +5,7 @@ import { Link, useLocation } from 'wouter';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
-import { Address, Order, generateOrderId, buildWhatsAppMessage, openWhatsApp, saveOrderLocally } from '@/lib/orders';
+import { Address, Order, generateOrderId, buildWhatsAppMessage, openWhatsApp, saveOrder } from '@/lib/orders';
 
 type Step = 'address' | 'review' | 'whatsapp';
 
@@ -95,10 +95,10 @@ export default function Checkout() {
       whatsappSent: false,
       createdAt: new Date().toISOString(),
     };
-    saveOrderLocally(order);
-    const message = buildWhatsAppMessage(order);
+    const savedOrder = await saveOrder(order);
+    const message = buildWhatsAppMessage(savedOrder);
     openWhatsApp(message);
-    navigate(`/order-success?orderId=${orderId}`);
+    navigate(`/order-success?orderId=${savedOrder.orderId}`);
     setLoading(false);
   };
 

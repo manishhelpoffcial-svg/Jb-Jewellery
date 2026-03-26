@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Users, MessageCircle, Eye, Search } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { getAllLocalOrders, Order, openWhatsApp } from '@/lib/orders';
+import { getAllOrders, Order, openWhatsApp } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
 
 interface Customer {
@@ -20,18 +20,19 @@ export default function AdminCustomers() {
   const [selected, setSelected] = useState<Customer | null>(null);
 
   useEffect(() => {
-    const orders = getAllLocalOrders();
-    const map = new Map<string, Customer>();
-    orders.forEach(o => {
-      if (!map.has(o.userId)) {
-        map.set(o.userId, { uid: o.userId, name: o.customerName, email: o.email, phone: o.phone, orders: [], totalSpent: 0, lastOrderDate: o.createdAt });
-      }
-      const c = map.get(o.userId)!;
-      c.orders.push(o);
-      c.totalSpent += o.grandTotal;
-      if (o.createdAt > c.lastOrderDate) c.lastOrderDate = o.createdAt;
+    getAllOrders().then(orders => {
+      const map = new Map<string, Customer>();
+      orders.forEach(o => {
+        if (!map.has(o.userId)) {
+          map.set(o.userId, { uid: o.userId, name: o.customerName, email: o.email, phone: o.phone, orders: [], totalSpent: 0, lastOrderDate: o.createdAt });
+        }
+        const c = map.get(o.userId)!;
+        c.orders.push(o);
+        c.totalSpent += o.grandTotal;
+        if (o.createdAt > c.lastOrderDate) c.lastOrderDate = o.createdAt;
+      });
+      setCustomers([...map.values()].sort((a, b) => b.orders.length - a.orders.length));
     });
-    setCustomers([...map.values()].sort((a, b) => b.orders.length - a.orders.length));
   }, []);
 
   const filtered = customers.filter(c => {
