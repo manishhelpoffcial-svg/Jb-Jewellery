@@ -13,14 +13,14 @@ export function CategoryRow() {
   return (
     <section className="py-8 bg-white border-b border-gray-50">
       <div className="container mx-auto px-4">
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory">
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory lg:grid lg:grid-cols-6 lg:overflow-visible lg:pb-0">
           {categories.map((cat, i) => (
             <a 
               key={i} 
               href="#" 
-              className="flex flex-col items-center gap-3 shrink-0 snap-center group cursor-pointer"
+              className="flex flex-col items-center gap-3 shrink-0 snap-center group cursor-pointer lg:shrink lg:w-auto"
             >
-              <div className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 group-hover:shadow-lg relative">
+              <div className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] lg:w-full lg:h-auto lg:aspect-square rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 group-hover:shadow-lg relative">
                 <img 
                   src={`${import.meta.env.BASE_URL}images/${cat.img}`} 
                   alt={cat.name}
