@@ -3,7 +3,7 @@ import { products } from '@/data/products';
 import { ProductCard } from '@/components/product/ProductCard';
 
 export function NewArrivals() {
-  const newProducts = products.filter(p => p.isNew).slice(0, 6);
+  const newProducts = products.filter(p => p.isNew).slice(0, 4);
 
   return (
     <section className="py-16 bg-primary/5">
@@ -18,9 +18,9 @@ export function NewArrivals() {
           </a>
         </div>
 
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar pb-6 snap-x">
+        <div className="flex gap-4 sm:gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0 lg:gap-6">
           {newProducts.map(p => (
-            <div key={p.id} className="w-[200px] sm:w-[240px] lg:w-[280px] shrink-0 snap-start">
+            <div key={p.id} className="w-[200px] sm:w-[230px] shrink-0 snap-start lg:w-auto">
               <ProductCard product={p} />
             </div>
           ))}

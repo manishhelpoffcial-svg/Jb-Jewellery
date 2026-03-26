@@ -14,7 +14,7 @@ export function ShopUnderBudget() {
       <div className="container mx-auto px-4">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black mb-8 text-center sm:text-left">Shop Under Budget</h2>
 
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar pb-6 snap-x lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar pb-6 snap-x lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0 lg:gap-6">
           {budgets.map((item, i) => (
             <Link
               key={i}
