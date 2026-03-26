@@ -24,3 +24,14 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+VITE_FIREBASE_API_KEY = "AIzaSyB5XRHx-zXWOqisFcy6CHsf9gOZfZWgn3Y"
+VITE_FIREBASE_AUTH_DOMAIN = "devlopment-e0feb.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID = "devlopment-e0feb"
+VITE_FIREBASE_STORAGE_BUCKET = "devlopment-e0feb.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID = "439837908796"
+VITE_FIREBASE_APP_ID = "1:439837908796:web:c38d93a8ad701b00260839"
+VITE_FIREBASE_MEASUREMENT_ID = "G-X71WNRTEE8"
