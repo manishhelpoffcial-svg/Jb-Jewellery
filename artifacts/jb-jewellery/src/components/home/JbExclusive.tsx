@@ -17,20 +17,19 @@ export function JbExclusive() {
 
   return (
     <section className="py-12 bg-gray-50/50">
-      <div className="container mx-auto px-4">
-        
-        {/* Banner */}
-        <div className="rounded-2xl overflow-hidden shadow-sm mb-8 relative group cursor-pointer">
-          <img 
-            src={`${import.meta.env.BASE_URL}images/jb-exclusive.png`} 
-            alt="JB Exclusive"
-            className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1515562141207-7a48cb3ce12a?w=1200&q=80`;
-            }}
-          />
-        </div>
+      {/* Banner — full width, no rounded corners */}
+      <div className="relative group cursor-pointer overflow-hidden mb-8">
+        <img 
+          src={`${import.meta.env.BASE_URL}images/jb-exclusive.png`} 
+          alt="JB Exclusive"
+          className="w-full h-auto lg:max-h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1515562141207-7a48cb3ce12a?w=1200&q=80`;
+          }}
+        />
+      </div>
 
+      <div className="container mx-auto px-4">
         {/* Filters */}
         <div className="flex gap-2 sm:gap-4 overflow-x-auto hide-scrollbar mb-8 justify-start sm:justify-center">
           {filters.map(f => (

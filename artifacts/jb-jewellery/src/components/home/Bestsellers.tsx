@@ -20,20 +20,19 @@ export function Bestsellers() {
 
   return (
     <section className="py-16 bg-gray-50 border-t border-gray-100">
-      <div className="container mx-auto px-4">
-        
-        {/* Banner */}
-        <div className="w-full h-[120px] sm:h-[180px] lg:h-[300px] xl:h-[340px] rounded-2xl overflow-hidden mb-12 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative">
-          <img 
-            src={`${import.meta.env.BASE_URL}images/hero-banner-2.png`} 
-            alt="Bestsellers" 
-            className="w-full h-full object-cover"
-            onError={(e) => {
-               (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1200&q=80`;
-            }}
-          />
-        </div>
+      {/* Banner — full width, no rounded corners */}
+      <div className="w-full h-[120px] sm:h-[180px] lg:h-[300px] xl:h-[340px] overflow-hidden mb-12 cursor-pointer group relative">
+        <img 
+          src={`${import.meta.env.BASE_URL}images/hero-banner-2.png`} 
+          alt="Bestsellers" 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          onError={(e) => {
+             (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1200&q=80`;
+          }}
+        />
+      </div>
 
+      <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <h2 className="text-3xl lg:text-4xl font-black text-gray-900 mb-2">Bestsellers</h2>

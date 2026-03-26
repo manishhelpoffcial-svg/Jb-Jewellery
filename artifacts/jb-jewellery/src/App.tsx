@@ -31,6 +31,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 import Home from "./pages/Home";
+import Products from "./pages/Products";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import MyOrders from "./pages/MyOrders";
@@ -48,6 +49,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/products" component={Products} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-success" component={OrderSuccess} />
       <Route path="/my-orders" component={MyOrders} />
