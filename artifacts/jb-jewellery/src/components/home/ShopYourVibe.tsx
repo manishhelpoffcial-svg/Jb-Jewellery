@@ -21,7 +21,7 @@ export function ShopYourVibe() {
           </div>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory lg:grid lg:grid-cols-5 lg:overflow-visible lg:pb-0">
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory">
           {vibes.map((vibe, i) => (
             <motion.div
               key={vibe.title}
@@ -29,13 +29,13 @@ export function ShopYourVibe() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.4 }}
-              className="relative w-[220px] sm:w-[260px] shrink-0 snap-start rounded-2xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-shadow duration-300 lg:w-auto"
+              className="relative w-[220px] sm:w-[260px] lg:w-[300px] shrink-0 snap-start rounded-2xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-shadow duration-300"
             >
               <Link href={`/products?category=${encodeURIComponent(vibe.category)}`}>
                 <img
                   src={`${import.meta.env.BASE_URL}images/${vibe.image}`}
                   alt={vibe.title}
-                  className="w-full aspect-[3/4] object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full aspect-[3/4] object-cover"
                 />
               </Link>
             </motion.div>

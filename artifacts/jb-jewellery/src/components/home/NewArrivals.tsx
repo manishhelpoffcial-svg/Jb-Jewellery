@@ -18,9 +18,9 @@ export function NewArrivals() {
           </a>
         </div>
 
-        <div className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto hide-scrollbar pb-6 snap-x lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0">
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar pb-6 snap-x">
           {newProducts.map(p => (
-            <div key={p.id} className="w-[200px] sm:w-[240px] shrink-0 snap-start lg:w-auto">
+            <div key={p.id} className="w-[200px] sm:w-[240px] lg:w-[280px] shrink-0 snap-start">
               <ProductCard product={p} />
             </div>
           ))}
