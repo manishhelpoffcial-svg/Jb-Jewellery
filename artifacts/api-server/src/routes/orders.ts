@@ -2,11 +2,19 @@ import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { query } from "../lib/db.js";
 import { authMiddleware, adminMiddleware, type JwtPayload } from "../lib/auth.js";
-import { sendOrderConfirmation, sendAdminOrderNotification, sendOrderStatusUpdate } from "../lib/mailer.js";
+import {
+  sendOrderConfirmation,
+  sendAdminOrderNotification,
+  sendOrderConfirmedEmail,
+  sendOrderShippedEmail,
+  sendOrderDeliveredEmail,
+  ADMIN_EMAIL,
+} from "../lib/mailer.js";
 import type { Request, Response } from "express";
 
 const router = Router();
 
+// ── Create Order ──────────────────────────────────────────────────────────────
 router.post("/", authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = (req as Request & { user: JwtPayload }).user;
@@ -31,7 +39,6 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
     const result = await query("SELECT * FROM jb_orders WHERE id = $1", [id]);
     const order = result.rows[0];
 
-    // Send emails asynchronously — don't block the response
     const emailOrder = {
       id,
       customer_name: customerName,
@@ -47,15 +54,16 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
       created_at: now,
     };
 
+    // Send order received confirmation + admin alert
     Promise.allSettled([
       sendOrderConfirmation(emailOrder),
-      sendAdminOrderNotification(emailOrder),
+      sendAdminOrderNotification({ ...emailOrder, grand_total: grandTotal }),
     ]).then((results) => {
       results.forEach((r, i) => {
         if (r.status === "rejected") {
-          console.error(`[Mailer] Email ${i === 0 ? "confirmation" : "admin"} failed:`, r.reason);
+          console.error(`[Mailer] ${i === 0 ? "Customer confirmation" : "Admin alert"} failed:`, r.reason);
         } else {
-          console.log(`[Mailer] Email ${i === 0 ? "confirmation" : "admin"} sent successfully`);
+          console.log(`[Mailer] ${i === 0 ? "Customer confirmation" : "Admin alert"} sent ✓`);
         }
       });
     });
@@ -67,6 +75,7 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
+// ── My Orders ─────────────────────────────────────────────────────────────────
 router.get("/my", authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = (req as Request & { user: JwtPayload }).user;
@@ -81,6 +90,7 @@ router.get("/my", authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
+// ── All Orders (admin) ────────────────────────────────────────────────────────
 router.get("/all", adminMiddleware, async (_req: Request, res: Response) => {
   try {
     const result = await query("SELECT * FROM jb_orders ORDER BY created_at DESC");
@@ -91,6 +101,7 @@ router.get("/all", adminMiddleware, async (_req: Request, res: Response) => {
   }
 });
 
+// ── Update Order Status (admin) ───────────────────────────────────────────────
 router.patch("/:id/status", adminMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -114,20 +125,40 @@ router.patch("/:id/status", adminMiddleware, async (req: Request, res: Response)
     const updated = await query("SELECT * FROM jb_orders WHERE id = $1", [id]);
     const updatedOrder = updated.rows[0];
 
-    // Send status update email to customer
+    // Trigger specific emails based on status change
     if (order.email) {
-      sendOrderStatusUpdate({
+      const baseInfo = {
         id,
         customer_name: order.customer_name,
         email: order.email,
-        grand_total: order.grand_total,
-        status,
+        grand_total: Number(order.grand_total),
         note: note || "",
-      }).then(() => {
-        console.log(`[Mailer] Status update email sent for order ${id}`);
-      }).catch((err) => {
-        console.error(`[Mailer] Status update email failed:`, err);
-      });
+      };
+
+      let emailPromise: Promise<void> | null = null;
+
+      if (status === "confirmed") {
+        emailPromise = sendOrderConfirmedEmail({
+          ...baseInfo,
+          items: Array.isArray(order.items) ? order.items : [],
+        });
+      } else if (status === "shipped") {
+        emailPromise = sendOrderShippedEmail({
+          ...baseInfo,
+          address: typeof order.address === "object" ? order.address : {},
+        });
+      } else if (status === "delivered") {
+        emailPromise = sendOrderDeliveredEmail({
+          ...baseInfo,
+          items: Array.isArray(order.items) ? order.items : [],
+        });
+      }
+
+      if (emailPromise) {
+        emailPromise
+          .then(() => console.log(`[Mailer] ${status} email sent to ${order.email} ✓`))
+          .catch((err) => console.error(`[Mailer] ${status} email failed:`, err));
+      }
     }
 
     res.json({ order: updatedOrder });
@@ -137,6 +168,7 @@ router.patch("/:id/status", adminMiddleware, async (req: Request, res: Response)
   }
 });
 
+// ── Customers (admin) ─────────────────────────────────────────────────────────
 router.get("/customers", adminMiddleware, async (_req: Request, res: Response) => {
   try {
     const result = await query(

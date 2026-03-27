@@ -38,6 +38,26 @@ export const api = {
       }),
     customers: () => request<{ customers: ApiCustomer[] }>('/orders/customers'),
   },
+  subscribers: {
+    subscribe: (email: string, name?: string) =>
+      request<{ success: boolean; message: string }>('/subscribers', {
+        method: 'POST',
+        body: JSON.stringify({ email, name }),
+      }),
+    list: () => request<{ subscribers: ApiSubscriber[] }>('/subscribers'),
+  },
+  notify: {
+    newArrival: (product: { name: string; category: string; price: number; originalPrice: number; discount: number }) =>
+      request<{ success: boolean; notified: number }>('/notify/new-arrival', {
+        method: 'POST',
+        body: JSON.stringify(product),
+      }),
+    restock: (product: { name: string; category: string; price: number }) =>
+      request<{ success: boolean; notified: number }>('/notify/restock', {
+        method: 'POST',
+        body: JSON.stringify(product),
+      }),
+  },
 };
 
 export interface ApiUser {
@@ -77,4 +97,12 @@ export interface ApiCustomer {
   created_at: string;
   order_count: string;
   total_spent: string;
+}
+
+export interface ApiSubscriber {
+  id: string;
+  email: string;
+  name: string;
+  subscribed_at: string;
+  active: boolean;
 }
