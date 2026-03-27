@@ -4,6 +4,9 @@ import authRouter from "./auth.js";
 import ordersRouter from "./orders.js";
 import subscribersRouter from "./subscribers.js";
 import notifyRouter from "./notify.js";
+import addressesRouter from "./addresses.js";
+import reviewsRouter from "./reviews.js";
+import adminCustomersRouter from "./admin-customers.js";
 
 const router: IRouter = Router();
 
@@ -12,5 +15,8 @@ router.use("/auth", authRouter);
 router.use("/orders", ordersRouter);
 router.use("/subscribers", subscribersRouter);
 router.use("/notify", notifyRouter);
+router.use("/addresses", addressesRouter);
+router.use("/reviews", reviewsRouter);
+router.use("/admin/customers", adminCustomersRouter);
 
 export default router;

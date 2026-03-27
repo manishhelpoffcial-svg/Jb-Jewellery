@@ -70,6 +70,44 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+router.patch("/profile", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { userId } = (req as Request & { user: JwtPayload }).user;
+    const { name, phone } = req.body;
+    const result = await query(
+      "UPDATE jb_users SET name=$1, phone=$2 WHERE id=$3 RETURNING id,name,email,phone,role",
+      [name, phone, userId]
+    );
+    if (result.rows.length === 0) { res.status(404).json({ error: "User not found" }); return; }
+    res.json({ user: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
+router.patch("/password", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { userId } = (req as Request & { user: JwtPayload }).user;
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) { res.status(400).json({ error: "Both passwords required" }); return; }
+    if (newPassword.length < 8) { res.status(400).json({ error: "Password must be at least 8 characters" }); return; }
+
+    const result = await query("SELECT * FROM jb_users WHERE id=$1", [userId]);
+    if (result.rows.length === 0) { res.status(404).json({ error: "User not found" }); return; }
+
+    const valid = await bcrypt.compare(currentPassword, result.rows[0].password_hash);
+    if (!valid) { res.status(400).json({ error: "Current password is incorrect" }); return; }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await query("UPDATE jb_users SET password_hash=$1 WHERE id=$2", [hash, userId]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to change password" });
+  }
+});
+
 router.get("/me", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { userId } = (req as Request & { user: JwtPayload }).user;

@@ -30,6 +30,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     return this.props.children;
   }
 }
+
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Checkout from "./pages/Checkout";
@@ -43,6 +44,18 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import NotFound from "./pages/not-found";
 
+import ProfilePage from "./pages/profile/ProfilePage";
+import ProfileOrders from "./pages/profile/ProfileOrders";
+import ProfileOrderDetail from "./pages/profile/ProfileOrderDetail";
+import ProfileAddresses from "./pages/profile/ProfileAddresses";
+import ProfileWishlist from "./pages/profile/ProfileWishlist";
+import ProfileReviews from "./pages/profile/ProfileReviews";
+import ProfileCoupons from "./pages/profile/ProfileCoupons";
+import ProfileRecently from "./pages/profile/ProfileRecently";
+import ProfileNotifications from "./pages/profile/ProfileNotifications";
+import ProfilePassword from "./pages/profile/ProfilePassword";
+import ProfileHelp from "./pages/profile/ProfileHelp";
+
 const queryClient = new QueryClient();
 
 function Router() {
@@ -53,12 +66,28 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-success" component={OrderSuccess} />
       <Route path="/my-orders" component={MyOrders} />
+
+      {/* Profile Section */}
+      <Route path="/profile" component={ProfilePage} />
+      <Route path="/profile/orders" component={ProfileOrders} />
+      <Route path="/profile/orders/:id" component={ProfileOrderDetail} />
+      <Route path="/profile/addresses" component={ProfileAddresses} />
+      <Route path="/profile/wishlist" component={ProfileWishlist} />
+      <Route path="/profile/reviews" component={ProfileReviews} />
+      <Route path="/profile/coupons" component={ProfileCoupons} />
+      <Route path="/profile/recently" component={ProfileRecently} />
+      <Route path="/profile/notifications" component={ProfileNotifications} />
+      <Route path="/profile/password" component={ProfilePassword} />
+      <Route path="/profile/help" component={ProfileHelp} />
+
+      {/* Admin Section */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/customers" component={AdminCustomers} />
       <Route path="/admin/coupons" component={AdminCoupons} />
       <Route path="/admin" component={AdminDashboard} />
+
       <Route component={NotFound} />
     </Switch>
   );

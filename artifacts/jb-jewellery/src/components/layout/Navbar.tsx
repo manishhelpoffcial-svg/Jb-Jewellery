@@ -82,6 +82,9 @@ export function Navbar() {
                       🔑 Admin Panel
                     </Link>
                   )}
+                  <Link href="/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+                    <User className="w-3.5 h-3.5" /> My Profile
+                  </Link>
                   <Link href="/my-orders" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
                     <Package className="w-3.5 h-3.5" /> My Orders
                   </Link>
