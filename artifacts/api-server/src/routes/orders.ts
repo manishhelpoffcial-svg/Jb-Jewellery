@@ -2,6 +2,7 @@ import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { query } from "../lib/db.js";
 import { authMiddleware, adminMiddleware, type JwtPayload } from "../lib/auth.js";
+import { sendOrderConfirmation, sendAdminOrderNotification, sendOrderStatusUpdate } from "../lib/mailer.js";
 import type { Request, Response } from "express";
 
 const router = Router();
@@ -28,7 +29,38 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
     );
 
     const result = await query("SELECT * FROM jb_orders WHERE id = $1", [id]);
-    res.status(201).json({ order: result.rows[0] });
+    const order = result.rows[0];
+
+    // Send emails asynchronously — don't block the response
+    const emailOrder = {
+      id,
+      customer_name: customerName,
+      email,
+      phone,
+      items,
+      address,
+      subtotal,
+      shipping,
+      discount,
+      grand_total: grandTotal,
+      coupon_code: couponCode,
+      created_at: now,
+    };
+
+    Promise.allSettled([
+      sendOrderConfirmation(emailOrder),
+      sendAdminOrderNotification(emailOrder),
+    ]).then((results) => {
+      results.forEach((r, i) => {
+        if (r.status === "rejected") {
+          console.error(`[Mailer] Email ${i === 0 ? "confirmation" : "admin"} failed:`, r.reason);
+        } else {
+          console.log(`[Mailer] Email ${i === 0 ? "confirmation" : "admin"} sent successfully`);
+        }
+      });
+    });
+
+    res.status(201).json({ order });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create order" });
@@ -80,7 +112,25 @@ router.patch("/:id/status", adminMiddleware, async (req: Request, res: Response)
     );
 
     const updated = await query("SELECT * FROM jb_orders WHERE id = $1", [id]);
-    res.json({ order: updated.rows[0] });
+    const updatedOrder = updated.rows[0];
+
+    // Send status update email to customer
+    if (order.email) {
+      sendOrderStatusUpdate({
+        id,
+        customer_name: order.customer_name,
+        email: order.email,
+        grand_total: order.grand_total,
+        status,
+        note: note || "",
+      }).then(() => {
+        console.log(`[Mailer] Status update email sent for order ${id}`);
+      }).catch((err) => {
+        console.error(`[Mailer] Status update email failed:`, err);
+      });
+    }
+
+    res.json({ order: updatedOrder });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update order" });
