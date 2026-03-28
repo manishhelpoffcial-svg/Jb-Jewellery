@@ -35,6 +35,10 @@ VITE_FIREBASE_STORAGE_BUCKET = "jb-jewellery.firebasestorage.app"
 VITE_FIREBASE_MESSAGING_SENDER_ID = "350196066764"
 VITE_FIREBASE_APP_ID = "1:350196066764:web:2599ec34c09a476ae51569"
 VITE_FIREBASE_MEASUREMENT_ID = "G-CSE46DXRRG"
+VITE_SUPABASE_URL = "https://cjcexbqqbrbgwkbwmwhy.supabase.co"
+VITE_SUPABASE_ANON_KEY = "sb_publishable_4SpFKoI7T0NhOY1U1kLicw_S7hX6Zdi"
+SUPABASE_URL = "https://cjcexbqqbrbgwkbwmwhy.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_4SpFKoI7T0NhOY1U1kLicw_S7hX6Zdi"
 
 [nix]
 channel = "stable-25_05"

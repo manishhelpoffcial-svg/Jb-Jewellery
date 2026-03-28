@@ -75,6 +75,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.100.1",
     "embla-carousel-autoplay": "^8.6.0",
     "firebase": "^12.11.0",
     "html2canvas": "^1.4.1",
