@@ -78,7 +78,7 @@ export const api = {
   },
 };
 
-export interface ApiUser { id: string; name: string; email: string; phone: string; role: string; }
+export interface ApiUser { id: string; name: string; email: string; phone: string; role: string; createdAt?: string; }
 export interface ApiOrder {
   id: string; user_id: string; customer_name: string; phone: string; email: string;
   items: unknown[]; address: unknown; subtotal: number; shipping: number; tax: number;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, MessageCircle, Eye, Search, Download, UserCheck, UserX, Mail, X, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, MessageCircle, Eye, Search, Download, UserCheck, UserX, Mail, X, Send, ChevronDown, ChevronUp, Star } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { api, type ApiAdminCustomer, type ApiOrder, type ApiAddress, type ApiReview } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
@@ -303,7 +303,11 @@ export default function AdminCustomers() {
                           <div key={r.id} className="bg-gray-50 rounded-xl p-2.5 text-xs">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-gray-700 truncate flex-1">{r.product_name}</span>
-                              <span>{'⭐'.repeat(r.rating)}</span>
+                              <span className="flex items-center gap-0.5">
+                                {Array.from({ length: 5 }, (_, i) => (
+                                  <Star key={i} className={`w-3 h-3 ${i < r.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+                                ))}
+                              </span>
                             </div>
                             {r.review_text && <p className="text-gray-500 mt-0.5 italic">"{r.review_text}"</p>}
                           </div>

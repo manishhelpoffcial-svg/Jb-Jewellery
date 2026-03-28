@@ -169,7 +169,7 @@ export default function ProfileReviews() {
               <h2 className="font-black text-lg">{editingId ? 'Edit Review' : 'Write Review'}</h2>
               <button onClick={() => setShowForm(false)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-4 h-4" /></button>
             </div>
-            {selectedProduct && <p className="text-sm font-semibold text-gray-700 mb-4">📦 {selectedProduct.name}</p>}
+            {selectedProduct && <p className="text-sm font-semibold text-gray-700 mb-4">{selectedProduct.name}</p>}
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-2 block">Your Rating *</label>

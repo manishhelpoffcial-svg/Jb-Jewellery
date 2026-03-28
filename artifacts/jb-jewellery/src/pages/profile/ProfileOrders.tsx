@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { Package, Search, Download, Eye, RotateCcw, X as XIcon } from 'lucide-react';
+import { Package, Search, Download, Eye, RotateCcw, X as XIcon, Star } from 'lucide-react';
 import { ProfileLayout } from '@/components/profile/ProfileLayout';
 import { getAllOrders, Order, updateOrderStatus } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
@@ -154,6 +154,12 @@ export default function ProfileOrders() {
                           className="flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-semibold transition-all">
                           <XIcon className="w-3.5 h-3.5" /> Cancel
                         </button>
+                      )}
+                      {o.status === 'delivered' && (
+                        <Link href="/profile/reviews"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 rounded-xl text-xs font-semibold transition-all">
+                          <Star className="w-3.5 h-3.5" /> Review
+                        </Link>
                       )}
                     </div>
                   </div>

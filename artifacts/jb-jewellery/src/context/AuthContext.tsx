@@ -7,6 +7,7 @@ export interface JBUser {
   email: string;
   phone: string;
   role: 'user' | 'admin';
+  createdAt?: string;
 }
 
 interface AuthContextType {
@@ -24,8 +25,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function toJBUser(u: ApiUser): JBUser {
-  return { uid: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role as 'user' | 'admin' };
+function toJBUser(u: ApiUser & { createdAt?: string }): JBUser {
+  return { uid: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role as 'user' | 'admin', createdAt: u.createdAt };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

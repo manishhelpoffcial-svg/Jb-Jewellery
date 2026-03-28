@@ -106,6 +106,10 @@ export default function ProfilePage() {
                 <input value={user?.email} disabled className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 cursor-not-allowed" />
                 <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
               </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Member Since</label>
+                <input value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'} disabled className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 cursor-not-allowed" />
+              </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={() => { setEditing(false); setName(user?.name || ''); setPhone(user?.phone || ''); }} className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 flex items-center justify-center gap-2">
                   <X className="w-4 h-4" /> Cancel
@@ -121,6 +125,7 @@ export default function ProfilePage() {
                 { label: 'Full Name', value: user?.name },
                 { label: 'Email Address', value: user?.email },
                 { label: 'Phone Number', value: user?.phone || 'Not added' },
+                { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
                   <span className="text-sm text-gray-500">{label}</span>

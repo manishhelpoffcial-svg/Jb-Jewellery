@@ -58,11 +58,16 @@ router.post("/login", async (req: Request, res: Response) => {
       return;
     }
 
+    if (user.is_active === false) {
+      res.status(403).json({ error: "Your account has been suspended. Please contact us for assistance." });
+      return;
+    }
+
     const payload: JwtPayload = { userId: user.id, email: user.email, role: user.role };
     const token = signToken(payload);
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, createdAt: user.created_at },
     });
   } catch (err) {
     console.error(err);
@@ -111,12 +116,13 @@ router.patch("/password", authMiddleware, async (req: Request, res: Response) =>
 router.get("/me", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { userId } = (req as Request & { user: JwtPayload }).user;
-    const result = await query("SELECT id, name, email, phone, role FROM jb_users WHERE id = $1", [userId]);
+    const result = await query("SELECT id, name, email, phone, role, created_at FROM jb_users WHERE id = $1", [userId]);
     if (result.rows.length === 0) {
       res.status(404).json({ error: "User not found" });
       return;
     }
-    res.json({ user: result.rows[0] });
+    const u = result.rows[0];
+    res.json({ user: { id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role, createdAt: u.created_at } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch user" });
