@@ -94,7 +94,7 @@ export default function OrderSuccess() {
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
-    doc.text('Thank you for shopping with JB Jewellery Collection! 💛', pageW / 2, y + 8, { align: 'center' });
+    doc.text('Thank you for shopping with JB Jewellery Collection!', pageW / 2, y + 8, { align: 'center' });
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.text('www.jbjewellery.com  |  @jbjewellery', pageW / 2, y + 15, { align: 'center' });
@@ -118,7 +118,7 @@ export default function OrderSuccess() {
           >
             <CheckCircle className="w-20 h-20 text-black mx-auto mb-3" />
           </motion.div>
-          <h1 className="text-2xl font-black text-black">Order Placed! 🎉</h1>
+          <h1 className="text-2xl font-black text-black">Order Placed!</h1>
           <p className="text-black/70 text-sm mt-1">Your WhatsApp order is on its way!</p>
           {order && (
             <div className="mt-4 bg-black/10 rounded-xl px-4 py-2 inline-block">

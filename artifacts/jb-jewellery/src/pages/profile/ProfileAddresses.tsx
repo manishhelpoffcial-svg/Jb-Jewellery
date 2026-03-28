@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Plus, Pencil, Trash2, Star, X, Save } from 'lucide-react';
+import { MapPin, Plus, Pencil, Trash2, Star, X, Save, Phone } from 'lucide-react';
 import { ProfileLayout } from '@/components/profile/ProfileLayout';
 import { api, type ApiAddress, type ApiAddressInput } from '@/lib/api';
 
@@ -112,7 +112,7 @@ export default function ProfileAddresses() {
                 <p className="font-semibold text-gray-800 text-sm">{a.full_name}</p>
                 <p className="text-gray-500 text-sm mt-0.5">{a.line1}{a.line2 ? `, ${a.line2}` : ''}</p>
                 <p className="text-gray-500 text-sm">{a.city}, {a.state} – {a.pincode}</p>
-                <p className="text-gray-400 text-xs mt-1">📞 {a.phone}</p>
+                <p className="text-gray-400 text-xs mt-1 flex items-center gap-1"><Phone className="w-3 h-3" /> {a.phone}</p>
                 <div className="flex items-center gap-2 mt-4">
                   <button onClick={() => openEdit(a)} className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition-all">
                     <Pencil className="w-3.5 h-3.5" /> Edit

@@ -31,14 +31,14 @@ export function Footer() {
         <div className="bg-gradient-to-r from-[#1A1A1A] to-[#2D2D2D] rounded-2xl px-6 py-8 md:px-10 md:py-10 mb-14 text-center md:text-left flex flex-col md:flex-row items-center gap-6 md:gap-10">
           <div className="flex-1">
             <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Newsletter</p>
-            <h3 className="text-xl md:text-2xl font-black text-white mb-1">Stay in the Sparkle Loop ✨</h3>
+            <h3 className="text-xl md:text-2xl font-black text-white mb-1">Stay in the Sparkle Loop</h3>
             <p className="text-gray-400 text-sm">New arrivals, restock alerts & exclusive deals — straight to your inbox.</p>
           </div>
           <div className="w-full md:w-auto md:min-w-[340px]">
             {status === 'success' ? (
               <div className="flex items-center justify-center md:justify-start gap-2 text-green-400 font-semibold">
                 <CheckCircle className="w-5 h-5" />
-                <span>You're subscribed! Welcome aboard 💛</span>
+                <span>You're subscribed! Welcome aboard.</span>
               </div>
             ) : (
               <form onSubmit={handleSubscribe} className="flex gap-2">

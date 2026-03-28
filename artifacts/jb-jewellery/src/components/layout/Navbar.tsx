@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Heart, ShoppingCart, User, Menu, X, LogOut, Package } from 'lucide-react';
+import { Search, Heart, ShoppingCart, User, Menu, X, LogOut, Package, ShieldCheck, Flame } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 
 const NAV_LINKS = [
   "Home", "New Arrivals", "Earrings", "Necklaces", "Chokers", 
-  "Bracelets", "Rings", "Anklets", "Hair Accessories", "Combo Deals", "Sale 🔥"
+  "Bracelets", "Rings", "Anklets", "Hair Accessories", "Combo Deals", "Sale"
 ];
 
 export function Navbar() {
@@ -79,7 +79,7 @@ export function Navbar() {
                   </div>
                   {user.role === 'admin' && (
                     <Link href="/admin" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors">
-                      🔑 Admin Panel
+                      <ShieldCheck className="w-3.5 h-3.5" /> Admin Panel
                     </Link>
                   )}
                   <Link href="/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
@@ -170,7 +170,7 @@ export function Navbar() {
                 </Link>
                 {user?.role === 'admin' && (
                   <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-primary hover:bg-primary/5">
-                    🔑 Admin Panel
+                    <ShieldCheck className="w-4 h-4" /> Admin Panel
                   </Link>
                 )}
                 {user && (

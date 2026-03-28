@@ -111,7 +111,7 @@ export default function ProfileReviews() {
         {/* Reviewable products */}
         {reviewableProducts.length > 0 && (
           <div className="bg-yellow-50 border border-yellow-100 rounded-2xl p-5">
-            <p className="text-sm font-bold text-yellow-800 mb-3">✨ Products waiting for your review</p>
+            <p className="text-sm font-bold text-yellow-800 mb-3">Products waiting for your review</p>
             <div className="space-y-2">
               {reviewableProducts.map(p => (
                 <div key={p.id} className="flex items-center gap-3 bg-white rounded-xl p-3">

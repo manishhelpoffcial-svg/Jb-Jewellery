@@ -25,7 +25,7 @@ export function TrustBadges() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Why Shop with JB?</h2>
-          <p className="text-gray-500 text-sm font-medium">We go the extra mile so you smile. ✨</p>
+          <p className="text-gray-500 text-sm font-medium">We go the extra mile so you smile.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-10 max-w-3xl mx-auto">

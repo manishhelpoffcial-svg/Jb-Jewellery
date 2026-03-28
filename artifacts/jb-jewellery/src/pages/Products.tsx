@@ -29,7 +29,7 @@ export default function Products() {
     subtitle = `Products priced under ₹${maxPrice}`;
   } else if (combo) {
     filtered = products.filter(p => p.isBestseller || p.isNew);
-    title = 'Unbeatable Combo Deals 🔥';
+    title = 'Unbeatable Combo Deals';
     subtitle = 'Grab more, save more with our combo offers';
   }
 
@@ -51,7 +51,6 @@ export default function Products() {
 
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <p className="text-5xl">💛</p>
               <p className="font-bold text-gray-700 text-lg">No products found</p>
               <Link href="/" className="px-6 py-3 bg-primary text-black font-bold rounded-full text-sm hover:bg-yellow-400 transition-colors">
                 Back to Home

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Save } from 'lucide-react';
+import { Bell, Save, CheckCircle } from 'lucide-react';
 import { ProfileLayout } from '@/components/profile/ProfileLayout';
 
 const EMAIL_PREFS_KEY = 'jb-notification-prefs';
@@ -42,7 +42,7 @@ export default function ProfileNotifications() {
         <h1 className="text-2xl font-black text-gray-900">Notification Settings</h1>
 
         {saved && (
-          <div className="px-4 py-3 rounded-xl bg-green-50 text-green-700 border border-green-200 text-sm font-medium">✅ Preferences saved!</div>
+          <div className="px-4 py-3 rounded-xl bg-green-50 text-green-700 border border-green-200 text-sm font-medium flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Preferences saved!</div>
         )}
 
         {/* Email */}

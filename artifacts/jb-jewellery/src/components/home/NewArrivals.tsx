@@ -11,7 +11,7 @@ export function NewArrivals() {
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="text-3xl lg:text-4xl font-black text-gray-900 mb-1">New Arrivals</h2>
-            <p className="text-gray-600 font-medium text-sm">Fresh drops, every week 💛</p>
+            <p className="text-gray-600 font-medium text-sm">Fresh drops, every week</p>
           </div>
           <a href="#" className="hidden sm:flex text-black font-bold text-sm hover:text-primary transition-colors items-center gap-1">
             View All &rarr;

@@ -65,7 +65,7 @@ export default function Checkout() {
     const disc = c.type === 'percentage' ? Math.min(Math.round(subtotal * c.value / 100), c.max) : Math.min(c.value, c.max);
     setCouponDiscount(disc);
     setCouponError('');
-    setCouponSuccess(`🎉 Coupon applied! You saved ₹${disc}`);
+    setCouponSuccess(`Coupon applied! You saved ₹${disc}`);
   };
 
   const handleAddressSubmit = (e: React.FormEvent) => {
@@ -269,7 +269,7 @@ export default function Checkout() {
                       </div>
                       <div>
                         <p className="font-bold text-sm">JB Jewellery Collection</p>
-                        <p className="text-xs text-gray-500">We reply within minutes! 💬</p>
+                        <p className="text-xs text-gray-500">We reply within minutes!</p>
                       </div>
                     </div>
                     <div className="space-y-1.5 text-sm text-gray-700">
@@ -285,7 +285,7 @@ export default function Checkout() {
                   </div>
 
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-sm text-yellow-800">
-                    💡 <strong>How it works:</strong> After clicking the button below, WhatsApp will open with your complete order details. Simply send the message to place your order!
+                    <strong>How it works:</strong> After clicking the button below, WhatsApp will open with your complete order details. Simply send the message to place your order!
                   </div>
 
                   {orderError && (

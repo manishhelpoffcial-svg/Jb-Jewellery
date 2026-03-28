@@ -16,7 +16,7 @@ export function ShopYourVibe() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
           <div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 mb-1">Shop Your Vibe ✨</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 mb-1">Shop Your Vibe</h2>
             <p className="text-gray-500 text-sm font-medium">Find jewellery that matches your mood & personality.</p>
           </div>
         </div>

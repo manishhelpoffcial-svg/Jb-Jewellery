@@ -18,7 +18,6 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 bg-white">
-          <p className="text-5xl">💛</p>
           <h1 className="text-2xl font-black text-black">Something went wrong</h1>
           <p className="text-gray-500 text-sm text-center max-w-sm">We hit an unexpected error. Please refresh the page or go back to continue shopping.</p>
           <button onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }} className="px-6 py-3 bg-yellow-400 text-black font-bold rounded-full hover:bg-yellow-500 transition-all">

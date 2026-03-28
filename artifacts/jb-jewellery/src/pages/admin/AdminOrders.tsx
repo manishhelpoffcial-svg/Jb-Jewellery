@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Package, Search, MessageCircle, Download, ChevronDown, Eye } from 'lucide-react';
+import { Package, Search, MessageCircle, Download, ChevronDown, Eye, CheckCircle, XCircle, Truck } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { getAllOrders, Order, updateOrderStatus, openWhatsApp } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
@@ -123,12 +123,12 @@ export default function AdminOrders() {
                               {actionMenu === o.orderId && (
                                 <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 w-44 py-1 text-xs">
                                   {o.status === 'pending' && <>
-                                    <button onClick={() => updateStatus(o.orderId, 'confirmed')} className="w-full px-3 py-2 text-left hover:bg-gray-50 text-green-700 font-semibold">✅ Accept Order</button>
-                                    <button onClick={() => updateStatus(o.orderId, 'cancelled')} className="w-full px-3 py-2 text-left hover:bg-gray-50 text-red-600 font-semibold">❌ Decline Order</button>
+                                    <button onClick={() => updateStatus(o.orderId, 'confirmed')} className="w-full px-3 py-2 text-left hover:bg-gray-50 text-green-700 font-semibold flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" /> Accept Order</button>
+                                    <button onClick={() => updateStatus(o.orderId, 'cancelled')} className="w-full px-3 py-2 text-left hover:bg-gray-50 text-red-600 font-semibold flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" /> Decline Order</button>
                                   </>}
-                                  {o.status === 'confirmed' && <button onClick={() => updateStatus(o.orderId, 'processing')} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold">📦 Mark Processing</button>}
-                                  {o.status === 'processing' && <button onClick={() => updateStatus(o.orderId, 'shipped')} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold">🚚 Mark Shipped</button>}
-                                  {o.status === 'shipped' && <button onClick={() => updateStatus(o.orderId, 'delivered')} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold text-green-700">✅ Mark Delivered</button>}
+                                  {o.status === 'confirmed' && <button onClick={() => updateStatus(o.orderId, 'processing')} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold flex items-center gap-1.5"><Package className="w-3.5 h-3.5" /> Mark Processing</button>}
+                                  {o.status === 'processing' && <button onClick={() => updateStatus(o.orderId, 'shipped')} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Mark Shipped</button>}
+                                  {o.status === 'shipped' && <button onClick={() => updateStatus(o.orderId, 'delivered')} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold text-green-700 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" /> Mark Delivered</button>}
                                   <div className="border-t border-gray-100 my-1" />
                                   <button onClick={() => whatsappCustomer(o, `Hi ${o.customerName}! Regarding your JB Jewellery order #${o.orderId} — Status: ${o.status}. Let us know if you have any questions! 💛`)} className="w-full px-3 py-2 text-left hover:bg-gray-50 text-green-600 font-semibold flex items-center gap-2">
                                     <MessageCircle className="w-3 h-3" /> WhatsApp

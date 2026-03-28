@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { X, Eye, EyeOff, Loader2, Sparkles, KeyRound, UserPlus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export function AuthModal() {
@@ -73,8 +73,8 @@ export function AuthModal() {
             {/* Header */}
             <div className="bg-primary px-6 py-5 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-black">
-                  {tab === 'login' ? 'Welcome Back! 💛' : tab === 'signup' ? 'Create Account ✨' : 'Reset Password 🔑'}
+                <h2 className="text-xl font-black text-black flex items-center gap-2">
+                  {tab === 'login' ? <><span>Welcome Back!</span></> : tab === 'signup' ? <><UserPlus className="w-5 h-5" /><span>Create Account</span></> : <><KeyRound className="w-5 h-5" /><span>Reset Password</span></>}
                 </h2>
                 <p className="text-black/70 text-xs mt-0.5 font-medium">
                   {tab === 'login' ? 'Sign in to your JB Jewellery account' : tab === 'signup' ? 'Join JB Jewellery Collection' : 'Enter your email to reset password'}
@@ -169,7 +169,7 @@ export function AuthModal() {
                   </div>
                   <button type="submit" disabled={loading} className="w-full py-3.5 bg-primary text-black font-bold rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 disabled:opacity-70">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {loading ? 'Creating account...' : 'Create My Account ✨'}
+                    {loading ? 'Creating account...' : 'Create My Account'}
                   </button>
                 </form>
               )}

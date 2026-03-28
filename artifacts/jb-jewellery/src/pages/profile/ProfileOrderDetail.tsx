@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRoute, Link } from 'wouter';
-import { ArrowLeft, Download, MessageCircle, Mail, CheckCircle, Clock, Package, Truck, XCircle } from 'lucide-react';
+import { ArrowLeft, Download, MessageCircle, Mail, CheckCircle, Clock, Package, Truck, XCircle, Phone } from 'lucide-react';
 import { ProfileLayout } from '@/components/profile/ProfileLayout';
 import { getAllOrders, Order, openWhatsApp } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
@@ -150,7 +150,7 @@ export default function ProfileOrderDetail() {
           <p className="text-sm font-semibold text-gray-800">{addr.fullName}</p>
           <p className="text-sm text-gray-600 mt-0.5">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}</p>
           <p className="text-sm text-gray-600">{addr.city}, {addr.state} – {addr.pincode}</p>
-          <p className="text-sm text-gray-500 mt-1">📞 {addr.phone}</p>
+          <p className="text-sm text-gray-500 mt-1 flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {addr.phone}</p>
         </div>
 
         {/* Help */}

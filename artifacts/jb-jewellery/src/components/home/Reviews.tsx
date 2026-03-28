@@ -5,7 +5,7 @@ const reviews = [
   { name: 'Riya S.', text: 'Absolutely love the quality! The pearl drop earrings look so premium. Fast delivery too.', initial: 'R' },
   { name: 'Priya M.', text: 'Bought the 6 for 499 combo. Such a steal! The designs are exactly as shown in pictures.', initial: 'P' },
   { name: 'Sneha K.', text: 'The chokers are so beautiful and lightweight. Wearing them daily to office.', initial: 'S' },
-  { name: 'Ananya R.', text: 'Great customer service and the packaging was so cute. Highly recommended ❤️', initial: 'A' },
+  { name: 'Ananya R.', text: 'Great customer service and the packaging was so cute. Highly recommended!', initial: 'A' },
 ];
 
 export function Reviews() {

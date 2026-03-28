@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Edit3, Save, X, Package, Heart, Star, IndianRupee } from 'lucide-react';
+import { User, Edit3, Save, X, Package, Heart, Star, IndianRupee, ShieldCheck, BadgeCheck } from 'lucide-react';
 import { ProfileLayout } from '@/components/profile/ProfileLayout';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
@@ -85,8 +85,8 @@ export default function ProfilePage() {
             <div>
               <h2 className="text-xl font-black text-gray-900">{user?.name}</h2>
               <p className="text-gray-500 text-sm">{user?.email}</p>
-              <span className="inline-block mt-2 text-xs font-bold bg-primary/20 text-yellow-700 px-3 py-1 rounded-full">
-                {user?.role === 'admin' ? '👑 Admin' : '✨ Member'}
+              <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold bg-primary/20 text-yellow-700 px-3 py-1 rounded-full">
+                {user?.role === 'admin' ? <><ShieldCheck className="w-3 h-3" /> Admin</> : <><BadgeCheck className="w-3 h-3" /> Member</>}
               </span>
             </div>
           </div>

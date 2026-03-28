@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Tag, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Plus, Tag, Trash2, AlertTriangle, X, CircleCheck, CircleOff } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface Coupon {
@@ -91,8 +91,8 @@ export default function AdminCoupons() {
               </div>
 
               <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                <span className={`text-xs font-semibold px-2 py-1 rounded-full ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {c.isActive ? '🟢 Active' : '⭕ Inactive'}
+                <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {c.isActive ? <><CircleCheck className="w-3 h-3" /> Active</> : <><CircleOff className="w-3 h-3" /> Inactive</>}
                 </span>
                 <button onClick={() => toggleActive(c.code)} className="text-xs font-semibold text-primary hover:underline">
                   {c.isActive ? 'Deactivate' : 'Activate'}
