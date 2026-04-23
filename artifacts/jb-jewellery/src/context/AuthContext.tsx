@@ -25,9 +25,18 @@ interface AuthContextType {
     phone: string,
     password: string,
     remember?: boolean,
+    address?: SignupAddress,
   ) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+}
+
+export interface SignupAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  state?: string;
+  pincode: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -116,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phone: string,
     password: string,
     remember = true,
+    address?: SignupAddress,
   ) => {
     setRememberMe(remember);
     const { data, error } = await supabase.auth.signUp({
@@ -141,6 +151,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           { onConflict: 'id' },
         );
       if (pErr) console.warn('[auth] profile upsert error', pErr.message);
+
+      if (address && address.line1 && address.city && address.pincode) {
+        const { error: aErr } = await supabase.from('addresses').insert({
+          user_id: data.user.id,
+          full_name: name,
+          phone,
+          line1: address.line1,
+          line2: address.line2 || '',
+          city: address.city,
+          state: address.state || '',
+          pincode: address.pincode,
+          country: 'India',
+          is_default: true,
+        });
+        if (aErr) console.warn('[auth] address insert error', aErr.message);
+      }
     }
 
     // Auto-login after signup. If a session was returned from signUp

@@ -13,7 +13,10 @@ export function AuthModal() {
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [loginRemember, setLoginRemember] = useState(true);
-  const [signupForm, setSignupForm] = useState({ name: '', email: '', phone: '', password: '' });
+  const [signupForm, setSignupForm] = useState({
+    name: '', email: '', phone: '', password: '',
+    line1: '', line2: '', city: '', state: '', pincode: '',
+  });
   const [signupRemember, setSignupRemember] = useState(true);
   const [forgotEmail, setForgotEmail] = useState('');
 
@@ -36,8 +39,25 @@ export function AuthModal() {
     if (signupForm.phone.length < 10) { setError('Please enter a valid 10-digit phone number.'); return; }
     setLoading(true); setError('');
     try {
-      await signup(signupForm.name, signupForm.email, signupForm.phone, signupForm.password, signupRemember);
-      setSignupForm({ name: '', email: '', phone: '', password: '' });
+      const address =
+        signupForm.line1 && signupForm.city && signupForm.pincode
+          ? {
+              line1: signupForm.line1,
+              line2: signupForm.line2,
+              city: signupForm.city,
+              state: signupForm.state,
+              pincode: signupForm.pincode,
+            }
+          : undefined;
+      await signup(
+        signupForm.name,
+        signupForm.email,
+        signupForm.phone,
+        signupForm.password,
+        signupRemember,
+        address,
+      );
+      setSignupForm({ name: '', email: '', phone: '', password: '', line1: '', line2: '', city: '', state: '', pincode: '' });
       closeAuthModal();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Signup failed. Please try again.';
@@ -186,6 +206,35 @@ export function AuthModal() {
                       </button>
                     </div>
                   </div>
+                  {/* Address section (optional) */}
+                  <div className="pt-2 mt-2 border-t border-gray-100">
+                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Delivery Address <span className="font-normal text-gray-400">(optional)</span></p>
+                    <div className="space-y-2.5">
+                      <input type="text" value={signupForm.line1}
+                        onChange={e => setSignupForm(p => ({ ...p, line1: e.target.value }))}
+                        placeholder="House / Flat / Street (Address line 1)"
+                        className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
+                      <input type="text" value={signupForm.line2}
+                        onChange={e => setSignupForm(p => ({ ...p, line2: e.target.value }))}
+                        placeholder="Area / Landmark (Address line 2)"
+                        className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <input type="text" value={signupForm.city}
+                          onChange={e => setSignupForm(p => ({ ...p, city: e.target.value }))}
+                          placeholder="City"
+                          className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
+                        <input type="text" value={signupForm.state}
+                          onChange={e => setSignupForm(p => ({ ...p, state: e.target.value }))}
+                          placeholder="State"
+                          className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
+                      </div>
+                      <input type="text" value={signupForm.pincode}
+                        onChange={e => setSignupForm(p => ({ ...p, pincode: e.target.value }))}
+                        placeholder="Pincode"
+                        className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
+                    </div>
+                  </div>
+
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"

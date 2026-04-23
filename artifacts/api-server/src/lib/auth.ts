@@ -44,3 +44,24 @@ export function adminMiddleware(req: Request, res: Response, next: NextFunction)
     next();
   });
 }
+
+// Simple shared-token middleware for the new Supabase-backed admin endpoints.
+// Browser admin panel sends VITE_ADMIN_PASSWORD in the `x-admin-token` header.
+export function simpleAdminMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const token = req.headers["x-admin-token"];
+  const expected =
+    process.env["ADMIN_PASSWORD"] || process.env["VITE_ADMIN_PASSWORD"];
+  if (!expected) {
+    res.status(500).json({ error: "Admin token not configured on server" });
+    return;
+  }
+  if (typeof token !== "string" || token !== expected) {
+    res.status(401).json({ error: "Unauthorized admin" });
+    return;
+  }
+  next();
+}
