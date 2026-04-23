@@ -39,6 +39,9 @@ VITE_SUPABASE_URL = "https://cjcexbqqbrbgwkbwmwhy.supabase.co"
 VITE_SUPABASE_ANON_KEY = "sb_publishable_4SpFKoI7T0NhOY1U1kLicw_S7hX6Zdi"
 SUPABASE_URL = "https://cjcexbqqbrbgwkbwmwhy.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_4SpFKoI7T0NhOY1U1kLicw_S7hX6Zdi"
+VITE_ADMIN_EMAIL = "amritabiswas7432@gmail.com"
+VITE_ADMIN_PASSWORD = "admin123"
+VITE_ADMIN_NAME = "admin"
 
 [nix]
 channel = "stable-25_05"

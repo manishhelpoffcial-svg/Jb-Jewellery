@@ -2,6 +2,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Component, ReactNode } from "react";
 import { AuthProvider } from "@/context/AuthContext";
+import { AdminAuthProvider, RequireAdmin } from "@/context/AdminAuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
@@ -81,11 +82,11 @@ function Router() {
 
       {/* Admin Section */}
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/orders" component={AdminOrders} />
-      <Route path="/admin/products" component={AdminProducts} />
-      <Route path="/admin/customers" component={AdminCustomers} />
-      <Route path="/admin/coupons" component={AdminCoupons} />
-      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/orders">{() => <RequireAdmin><AdminOrders /></RequireAdmin>}</Route>
+      <Route path="/admin/products">{() => <RequireAdmin><AdminProducts /></RequireAdmin>}</Route>
+      <Route path="/admin/customers">{() => <RequireAdmin><AdminCustomers /></RequireAdmin>}</Route>
+      <Route path="/admin/coupons">{() => <RequireAdmin><AdminCoupons /></RequireAdmin>}</Route>
+      <Route path="/admin">{() => <RequireAdmin><AdminDashboard /></RequireAdmin>}</Route>
 
       <Route component={NotFound} />
     </Switch>
@@ -97,15 +98,17 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <Router />
-                <AuthModal />
-                <CartDrawer />
-              </WouterRouter>
-            </WishlistProvider>
-          </CartProvider>
+          <AdminAuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                  <Router />
+                  <AuthModal />
+                  <CartDrawer />
+                </WouterRouter>
+              </WishlistProvider>
+            </CartProvider>
+          </AdminAuthProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

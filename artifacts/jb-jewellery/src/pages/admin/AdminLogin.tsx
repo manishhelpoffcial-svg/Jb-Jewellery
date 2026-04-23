@@ -1,36 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Loader2, Lock } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import { useLocation } from 'wouter';
+import { useAdminAuth } from '@/context/AdminAuthContext';
 
 export default function AdminLogin() {
-  const { login, user } = useAuth();
+  const { admin, login } = useAdminAuth();
   const [, navigate] = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(true);
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  React.useEffect(() => {
-    if (user?.role === 'admin') navigate('/admin');
-  }, [user]);
+  useEffect(() => {
+    if (admin) navigate('/admin', { replace: true });
+  }, [admin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
-      await login(email, password);
-      if (user?.role !== 'admin' && !email.includes('admin')) {
-        setError('Access Denied. You do not have admin privileges.');
-        setLoading(false);
-        return;
-      }
-      navigate('/admin');
+      await login(email, password, remember);
+      navigate('/admin', { replace: true });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '') : 'Login failed.');
-    } finally { setLoading(false); }
+      setError(err instanceof Error ? err.message : 'Login failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,30 +48,63 @@ export default function AdminLogin() {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-5">
-          {error && <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
+          {error && (
+            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              {error}
+            </div>
+          )}
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Admin Email</label>
-            <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="admin@jbjewellery.com" />
+              placeholder="admin@jbjewellery.com"
+            />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Password</label>
             <div className="relative">
-              <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+              <input
+                type={showPass ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 className="w-full px-4 py-3 pr-11 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-                placeholder="••••••••" />
-              <button type="button" onClick={() => setShowPass(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black">
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass((p) => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
+              >
                 {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
-          <button type="submit" disabled={loading}
-            className="w-full py-3.5 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 disabled:opacity-70">
+
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="w-4 h-4 accent-black rounded"
+            />
+            <span className="text-xs font-semibold text-gray-700">Remember me on this device</span>
+          </label>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+          >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
             {loading ? 'Logging in...' : 'Login to Admin Panel'}
           </button>
-          <p className="text-center text-xs text-gray-400">Demo: use any email with "admin" in it</p>
         </form>
       </motion.div>
     </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { LayoutDashboard, Package, ShoppingBag, Users, Tag, BarChart2, Settings, LogOut, Menu, X, ChevronRight } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAdminAuth } from '@/context/AdminAuthContext';
 
 const NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
@@ -14,7 +14,7 @@ const NAV = [
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, admin: user } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
