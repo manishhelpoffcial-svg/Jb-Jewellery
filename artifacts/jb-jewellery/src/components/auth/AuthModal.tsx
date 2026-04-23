@@ -37,10 +37,15 @@ export function AuthModal() {
     setLoading(true); setError('');
     try {
       await signup(signupForm.name, signupForm.email, signupForm.phone, signupForm.password, signupRemember);
-      setSuccess('Account created! Check your email to confirm your address, then login.');
       setSignupForm({ name: '', email: '', phone: '', password: '' });
+      closeAuthModal();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Signup failed. Please try again.');
+      const msg = err instanceof Error ? err.message : 'Signup failed. Please try again.';
+      if (/confirm/i.test(msg) && /email/i.test(msg)) {
+        setSuccess('Account created! Please check your email to confirm your address, then log in.');
+      } else {
+        setError(msg);
+      }
     } finally { setLoading(false); }
   };
 

@@ -142,6 +142,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       if (pErr) console.warn('[auth] profile upsert error', pErr.message);
     }
+
+    // Auto-login after signup. If a session was returned from signUp
+    // (email confirmation disabled), we're already signed in. Otherwise
+    // try signing in with the same credentials.
+    if (!data.session) {
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInErr) {
+        // Most likely "Email not confirmed" — surface to caller.
+        throw new Error(signInErr.message);
+      }
+    }
   };
 
   const logout = async () => {
