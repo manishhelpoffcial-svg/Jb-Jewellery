@@ -12,7 +12,9 @@ export function AuthModal() {
   const [success, setSuccess] = useState('');
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [loginRemember, setLoginRemember] = useState(true);
   const [signupForm, setSignupForm] = useState({ name: '', email: '', phone: '', password: '' });
+  const [signupRemember, setSignupRemember] = useState(true);
   const [forgotEmail, setForgotEmail] = useState('');
 
   React.useEffect(() => { setTab(authModalTab); }, [authModalTab]);
@@ -22,10 +24,10 @@ export function AuthModal() {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      await login(loginForm.email, loginForm.password);
+      await login(loginForm.email, loginForm.password, loginRemember);
       closeAuthModal();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '') : 'Login failed. Please check your credentials.');
+      setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
     } finally { setLoading(false); }
   };
 
@@ -34,10 +36,11 @@ export function AuthModal() {
     if (signupForm.phone.length < 10) { setError('Please enter a valid 10-digit phone number.'); return; }
     setLoading(true); setError('');
     try {
-      await signup(signupForm.name, signupForm.email, signupForm.phone, signupForm.password);
-      closeAuthModal();
+      await signup(signupForm.name, signupForm.email, signupForm.phone, signupForm.password, signupRemember);
+      setSuccess('Account created! Check your email to confirm your address, then login.');
+      setSignupForm({ name: '', email: '', phone: '', password: '' });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '') : 'Signup failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'Signup failed. Please try again.');
     } finally { setLoading(false); }
   };
 
@@ -48,7 +51,7 @@ export function AuthModal() {
       await resetPassword(forgotEmail);
       setSuccess('Reset link sent! Check your email inbox.');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '') : 'Failed to send reset email.');
+      setError(err instanceof Error ? err.message : 'Failed to send reset email.');
     } finally { setLoading(false); }
   };
 
@@ -129,9 +132,20 @@ export function AuthModal() {
                       </button>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setTab('forgot')} className="text-xs text-primary font-semibold hover:underline">
-                    Forgot Password?
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={loginRemember}
+                        onChange={e => setLoginRemember(e.target.checked)}
+                        className="w-4 h-4 accent-black rounded"
+                      />
+                      <span className="text-xs font-semibold text-gray-700">Remember me</span>
+                    </label>
+                    <button type="button" onClick={() => setTab('forgot')} className="text-xs text-primary font-semibold hover:underline">
+                      Forgot Password?
+                    </button>
+                  </div>
                   <button type="submit" disabled={loading} className="w-full py-3.5 bg-primary text-black font-bold rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 disabled:opacity-70">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {loading ? 'Signing in...' : 'Login to JB Jewellery'}
@@ -167,6 +181,15 @@ export function AuthModal() {
                       </button>
                     </div>
                   </div>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={signupRemember}
+                      onChange={e => setSignupRemember(e.target.checked)}
+                      className="w-4 h-4 accent-black rounded"
+                    />
+                    <span className="text-xs font-semibold text-gray-700">Remember me on this device</span>
+                  </label>
                   <button type="submit" disabled={loading} className="w-full py-3.5 bg-primary text-black font-bold rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 disabled:opacity-70">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {loading ? 'Creating account...' : 'Create My Account'}
