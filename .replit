@@ -42,6 +42,7 @@ SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 VITE_ADMIN_EMAIL = "amritabiswas7432@gmail.com"
 VITE_ADMIN_PASSWORD = "admin123"
 VITE_ADMIN_NAME = "admin"
+ZOHO_EMAIL = "manish@grafxcore.in"
 
 [nix]
 channel = "stable-25_05"
