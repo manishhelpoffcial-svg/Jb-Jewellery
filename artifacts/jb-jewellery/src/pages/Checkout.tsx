@@ -6,6 +6,8 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
 import { Address, Order, generateOrderId, buildWhatsAppMessage, openWhatsApp, saveOrder } from '@/lib/orders';
+import { findCoupon } from '@/lib/sbCatalog';
+import { uploadInvoiceToStorage } from '@/lib/invoice';
 
 type Step = 'address' | 'review' | 'whatsapp';
 
@@ -52,19 +54,30 @@ export default function Checkout() {
   const tax = Math.round(subtotal * TAX_RATE);
   const grandTotal = subtotal + shipping + tax - couponDiscount;
 
-  const VALID_COUPONS: Record<string, { type: 'percentage' | 'flat'; value: number; min: number; max: number }> = {
-    'JBFIRST': { type: 'percentage', value: 50, min: 299, max: 200 },
-    'FLAT100': { type: 'flat', value: 100, min: 599, max: 100 },
-    'WELCOME20': { type: 'percentage', value: 20, min: 199, max: 150 },
-  };
-
-  const applyCoupon = () => {
-    const c = VALID_COUPONS[couponCode.toUpperCase()];
-    if (!c) { setCouponError('Invalid coupon code.'); setCouponSuccess(''); return; }
-    if (subtotal < c.min) { setCouponError(`Min. order ₹${c.min} required.`); setCouponSuccess(''); return; }
-    const disc = c.type === 'percentage' ? Math.min(Math.round(subtotal * c.value / 100), c.max) : Math.min(c.value, c.max);
-    setCouponDiscount(disc);
+  const applyCoupon = async () => {
     setCouponError('');
+    setCouponSuccess('');
+    const code = couponCode.trim().toUpperCase();
+    if (!code) { setCouponError('Enter a coupon code.'); return; }
+    const c = await findCoupon(code);
+    if (!c) { setCouponError('Invalid or expired coupon.'); return; }
+    if (subtotal < c.min_order) {
+      setCouponError(`Min. order ₹${c.min_order} required for this coupon.`);
+      return;
+    }
+    if (c.expiry && new Date(c.expiry) < new Date()) {
+      setCouponError('This coupon has expired.');
+      return;
+    }
+    if (c.usage_limit > 0 && c.used_count >= c.usage_limit) {
+      setCouponError('This coupon has reached its usage limit.');
+      return;
+    }
+    const raw = c.type === 'percentage'
+      ? Math.round((subtotal * c.value) / 100)
+      : c.value;
+    const disc = c.max_discount > 0 ? Math.min(raw, c.max_discount) : raw;
+    setCouponDiscount(disc);
     setCouponSuccess(`Coupon applied! You saved ₹${disc}`);
   };
 
@@ -100,6 +113,11 @@ export default function Checkout() {
       };
       const savedOrder = await saveOrder(order);
       clearCart();
+      // Generate the invoice PDF and store it in Supabase storage in the
+      // background; the customer can download it from My Orders later.
+      uploadInvoiceToStorage(savedOrder).catch((e) =>
+        console.warn('[checkout] invoice upload failed', e),
+      );
       const message = buildWhatsAppMessage(savedOrder);
       openWhatsApp(message);
       navigate(`/order-success?orderId=${savedOrder.orderId}`);

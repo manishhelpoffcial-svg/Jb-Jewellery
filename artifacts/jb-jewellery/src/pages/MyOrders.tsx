@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Package, ArrowLeft, Download, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, ArrowLeft, Download, MessageCircle, ChevronDown, ChevronUp, Printer, Loader2 } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '@/context/AuthContext';
 import { getMyOrders, Order, openWhatsApp } from '@/lib/orders';
+import { downloadInvoicePdf, printInvoice } from '@/lib/invoice';
 import { formatPrice } from '@/lib/utils';
-import jsPDF from 'jspdf';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; step: number }> = {
   pending:    { label: 'Order Placed',  color: 'text-yellow-700', bg: 'bg-yellow-100', step: 1 },
@@ -20,47 +20,20 @@ const TIMELINE_STEPS = ['pending', 'confirmed', 'processing', 'shipped', 'delive
 export default function MyOrders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) getMyOrders(user.uid).then(setOrders);
+    if (!user) return;
+    setLoading(true);
+    getMyOrders(user.uid)
+      .then(setOrders)
+      .finally(() => setLoading(false));
   }, [user]);
 
-  const downloadInvoice = (order: Order) => {
-    const doc = new jsPDF();
-    const pageW = doc.internal.pageSize.getWidth();
-    doc.setFillColor(255, 215, 0);
-    doc.rect(0, 0, pageW, 40, 'F');
-    doc.setFontSize(20); doc.setFont('helvetica', 'bold');
-    doc.text('JB JEWELLERY COLLECTION', pageW / 2, 18, { align: 'center' });
-    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-    doc.text('Fashion Jewellery | hello@jbjewellery.com', pageW / 2, 30, { align: 'center' });
-    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-    doc.text(`ORDER INVOICE`, 14, 55);
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(`Order ID: #${order.orderId}`, 14, 65);
-    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString('en-IN')}`, 14, 72);
-    doc.text(`Customer: ${order.customerName}`, 14, 82);
-    doc.text(`Address: ${order.address.line1}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}`, 14, 89);
-    let y = 105;
-    doc.setFillColor(240, 240, 240); doc.rect(14, y - 6, pageW - 28, 8, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.text('Item', 16, y); doc.text('Qty', 120, y); doc.text('Rate', 140, y); doc.text('Total', 165, y);
-    y += 8; doc.setFont('helvetica', 'normal');
-    order.items.forEach((item, i) => {
-      doc.text(`${i + 1}. ${item.name.substring(0, 30)}`, 16, y);
-      doc.text(`${item.quantity}`, 122, y); doc.text(`₹${item.price}`, 138, y); doc.text(`₹${item.price * item.quantity}`, 163, y);
-      y += 8;
-    });
-    y += 4; doc.line(14, y, pageW - 14, y); y += 8;
-    doc.text('Subtotal:', 132, y); doc.text(`₹${order.subtotal}`, 163, y); y += 7;
-    doc.text('Shipping:', 132, y); doc.text(`₹${order.shipping}`, 163, y); y += 7;
-    doc.text('Tax (5%):', 132, y); doc.text(`₹${order.tax}`, 163, y); y += 7;
-    if (order.discount > 0) { doc.text('Discount:', 132, y); doc.text(`-₹${order.discount}`, 163, y); y += 7; }
-    doc.line(130, y, pageW - 14, y); y += 7;
-    doc.setFont('helvetica', 'bold');
-    doc.text('GRAND TOTAL:', 120, y); doc.text(`₹${order.grandTotal}`, 163, y);
-    doc.save(`invoice-${order.orderId}.pdf`);
+  const openStoredOrDownload = (order: Order) => {
+    if (order.invoiceUrl) window.open(order.invoiceUrl, '_blank');
+    else downloadInvoicePdf(order);
   };
 
   if (!user) {
@@ -75,7 +48,6 @@ export default function MyOrders() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b sticky top-0 z-30">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Link href="/" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -89,7 +61,12 @@ export default function MyOrders() {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        {orders.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-20">
+            <Loader2 className="w-7 h-7 animate-spin text-primary mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">Loading your orders…</p>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="text-center py-20">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 font-medium mb-2">No orders yet!</p>
@@ -103,7 +80,6 @@ export default function MyOrders() {
               const isExpanded = expanded === order.orderId;
               return (
                 <div key={order.orderId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  {/* Order Header */}
                   <div className="p-5 flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -119,7 +95,6 @@ export default function MyOrders() {
                     </button>
                   </div>
 
-                  {/* Status Timeline */}
                   {order.status !== 'cancelled' && (
                     <div className="px-5 pb-4">
                       <div className="flex items-center gap-0">
@@ -145,10 +120,8 @@ export default function MyOrders() {
                     </div>
                   )}
 
-                  {/* Expanded Details */}
                   {isExpanded && (
                     <div className="border-t border-gray-100 p-5 space-y-4">
-                      {/* Items */}
                       <div>
                         <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-3">Items Ordered</p>
                         <div className="space-y-2">
@@ -165,7 +138,6 @@ export default function MyOrders() {
                         </div>
                       </div>
 
-                      {/* Price */}
                       <div className="bg-gray-50 rounded-xl p-4 text-sm space-y-1.5">
                         <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
                         <div className="flex justify-between text-gray-500"><span>Shipping</span><span>{order.shipping === 0 ? 'FREE' : formatPrice(order.shipping)}</span></div>
@@ -174,7 +146,6 @@ export default function MyOrders() {
                         <div className="flex justify-between font-black text-base border-t border-gray-200 pt-2 mt-2"><span>Total</span><span>{formatPrice(order.grandTotal)}</span></div>
                       </div>
 
-                      {/* Delivery Address */}
                       <div>
                         <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Delivery Address</p>
                         <p className="text-sm text-gray-700">{order.address.fullName}</p>
@@ -182,13 +153,15 @@ export default function MyOrders() {
                         <p className="text-xs text-gray-500">{order.address.city}, {order.address.state} - {order.address.pincode}</p>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex gap-3">
-                        <button onClick={() => downloadInvoice(order)} className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold hover:border-primary hover:bg-primary/5 transition-all">
+                      <div className="grid grid-cols-3 gap-2">
+                        <button onClick={() => openStoredOrDownload(order)} className="flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold hover:border-primary hover:bg-primary/5 transition-all">
                           <Download className="w-3.5 h-3.5" /> Invoice
                         </button>
-                        <button onClick={() => openWhatsApp(`Hi! I need help with my JB Jewellery order #${order.orderId}.`)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366] text-white rounded-xl text-xs font-semibold hover:bg-[#22c55e] transition-all">
-                          <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                        <button onClick={() => printInvoice(order)} className="flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold hover:border-primary hover:bg-primary/5 transition-all">
+                          <Printer className="w-3.5 h-3.5" /> Print
+                        </button>
+                        <button onClick={() => openWhatsApp(`Hi! I need help with my JB Jewellery order #${order.orderId}.`)} className="flex items-center justify-center gap-2 py-2.5 bg-[#25D366] text-white rounded-xl text-xs font-semibold hover:bg-[#22c55e] transition-all">
+                          <MessageCircle className="w-3.5 h-3.5" /> Help
                         </button>
                       </div>
                     </div>

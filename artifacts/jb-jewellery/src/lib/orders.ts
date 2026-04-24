@@ -1,5 +1,6 @@
 import { CartItem } from '@/context/CartContext';
-import { api } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+import { adminApi } from '@/lib/adminApi';
 
 export interface Address {
   fullName: string;
@@ -28,6 +29,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   statusHistory: { status: string; time: string }[];
   whatsappSent: boolean;
+  invoiceUrl?: string | null;
   createdAt: string;
 }
 
@@ -95,10 +97,66 @@ export function openWhatsApp(message: string) {
   window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
+// ── Mapping helpers ────────────────────────────────────────────────────────
+interface SbOrderRow {
+  id: string;
+  user_id: string | null;
+  customer_name: string;
+  phone: string;
+  email: string;
+  items: CartItem[] | unknown;
+  address: Address | unknown;
+  subtotal: number | string;
+  shipping: number | string;
+  tax: number | string;
+  discount: number | string;
+  coupon_code: string | null;
+  grand_total: number | string;
+  status: string;
+  status_history: { status: string; timestamp: string; note?: string }[] | null;
+  whatsapp_sent: boolean | null;
+  invoice_url: string | null;
+  created_at: string;
+}
+
+function mapRow(r: SbOrderRow): Order {
+  return {
+    orderId: r.id,
+    userId: r.user_id || '',
+    customerName: r.customer_name,
+    phone: r.phone,
+    email: r.email,
+    items: (r.items as CartItem[]) || [],
+    address: (r.address as Address) || ({} as Address),
+    subtotal: Number(r.subtotal),
+    shipping: Number(r.shipping),
+    tax: Number(r.tax),
+    discount: Number(r.discount),
+    couponCode: r.coupon_code || '',
+    grandTotal: Number(r.grand_total),
+    status: (r.status as Order['status']) || 'pending',
+    statusHistory: (r.status_history || []).map((h) => ({
+      status: h.status,
+      time: h.timestamp,
+    })),
+    whatsappSent: !!r.whatsapp_sent,
+    invoiceUrl: r.invoice_url,
+    createdAt: r.created_at,
+  };
+}
+
+// ── Persistence ───────────────────────────────────────────────────────────
 export async function saveOrder(order: Order): Promise<Order> {
   try {
-    const { order: saved } = await api.orders.create({
-      customerName: order.customerName,
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess?.session?.user?.id || order.userId;
+    const now = new Date().toISOString();
+    const statusHistory = [{ status: 'pending', timestamp: now, note: 'Order placed' }];
+
+    const insertRow = {
+      id: order.orderId,
+      user_id: uid || null,
+      customer_name: order.customerName,
       phone: order.phone,
       email: order.email,
       items: order.items,
@@ -107,31 +165,25 @@ export async function saveOrder(order: Order): Promise<Order> {
       shipping: order.shipping,
       tax: order.tax,
       discount: order.discount,
-      couponCode: order.couponCode,
-      grandTotal: order.grandTotal,
-    });
-    const mapped: Order = {
-      orderId: saved.id,
-      userId: saved.user_id,
-      customerName: saved.customer_name,
-      phone: saved.phone,
-      email: saved.email,
-      items: saved.items as CartItem[],
-      address: saved.address as Address,
-      subtotal: saved.subtotal,
-      shipping: saved.shipping,
-      tax: saved.tax,
-      discount: saved.discount,
-      couponCode: saved.coupon_code,
-      grandTotal: saved.grand_total,
-      status: saved.status as Order['status'],
-      statusHistory: (saved.status_history || []).map(h => ({ status: h.status, time: h.timestamp })),
-      whatsappSent: saved.whatsapp_sent,
-      createdAt: saved.created_at,
+      coupon_code: order.couponCode || null,
+      grand_total: order.grandTotal,
+      status: 'pending',
+      status_history: statusHistory,
+      whatsapp_sent: false,
     };
-    saveOrderLocally(mapped);
-    return mapped;
-  } catch {
+
+    const { data, error } = await supabase
+      .from('orders')
+      .insert(insertRow)
+      .select()
+      .single();
+    if (error) throw error;
+
+    const saved = mapRow(data as SbOrderRow);
+    saveOrderLocally(saved);
+    return saved;
+  } catch (err) {
+    console.warn('[orders] Supabase insert failed, using local fallback', err);
     saveOrderLocally(order);
     return order;
   }
@@ -139,26 +191,12 @@ export async function saveOrder(order: Order): Promise<Order> {
 
 export async function getMyOrders(userId: string): Promise<Order[]> {
   try {
-    const { orders } = await api.orders.my();
-    return orders.map(o => ({
-      orderId: o.id,
-      userId: o.user_id,
-      customerName: o.customer_name,
-      phone: o.phone,
-      email: o.email,
-      items: o.items as CartItem[],
-      address: o.address as Address,
-      subtotal: o.subtotal,
-      shipping: o.shipping,
-      tax: o.tax,
-      discount: o.discount,
-      couponCode: o.coupon_code,
-      grandTotal: o.grand_total,
-      status: o.status as Order['status'],
-      statusHistory: (o.status_history || []).map(h => ({ status: h.status, time: h.timestamp })),
-      whatsappSent: o.whatsapp_sent,
-      createdAt: o.created_at,
-    }));
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return ((data || []) as SbOrderRow[]).map(mapRow);
   } catch {
     return getLocalOrders(userId);
   }
@@ -166,39 +204,33 @@ export async function getMyOrders(userId: string): Promise<Order[]> {
 
 export async function getAllOrders(): Promise<Order[]> {
   try {
-    const { orders } = await api.orders.all();
-    return orders.map(o => ({
-      orderId: o.id,
-      userId: o.user_id,
-      customerName: o.customer_name,
-      phone: o.phone,
-      email: o.email,
-      items: o.items as CartItem[],
-      address: o.address as Address,
-      subtotal: o.subtotal,
-      shipping: o.shipping,
-      tax: o.tax,
-      discount: o.discount,
-      couponCode: o.coupon_code,
-      grandTotal: o.grand_total,
-      status: o.status as Order['status'],
-      statusHistory: (o.status_history || []).map(h => ({ status: h.status, time: h.timestamp })),
-      whatsappSent: o.whatsapp_sent,
-      createdAt: o.created_at,
-    }));
-  } catch {
+    const { orders } = await adminApi.listOrders();
+    return orders.map((o) =>
+      mapRow({
+        ...o,
+        items: o.items,
+        address: o.address,
+      } as unknown as SbOrderRow),
+    );
+  } catch (err) {
+    console.warn('[orders] admin list failed', err);
     return getAllLocalOrders();
   }
 }
 
-export async function updateOrderStatus(orderId: string, status: Order['status'], note?: string): Promise<void> {
+export async function updateOrderStatus(
+  orderId: string,
+  status: Order['status'],
+  note?: string,
+): Promise<void> {
   try {
-    await api.orders.updateStatus(orderId, status, note);
+    await adminApi.updateOrderStatus(orderId, status, note);
   } catch {
     updateLocalOrderStatus(orderId, status);
   }
 }
 
+// ── Local fallback (used only when Supabase is unreachable) ───────────────
 export function saveOrderLocally(order: Order) {
   const existing = JSON.parse(localStorage.getItem('jb-orders') || '[]') as Order[];
   const filtered = existing.filter(o => o.orderId !== order.orderId);

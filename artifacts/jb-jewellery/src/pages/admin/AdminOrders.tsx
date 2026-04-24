@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Package, Search, MessageCircle, Download, ChevronDown, Eye, CheckCircle, XCircle, Truck } from 'lucide-react';
+import { Package, Search, MessageCircle, Download, ChevronDown, CheckCircle, XCircle, Truck, Printer, Loader2 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { getAllOrders, Order, updateOrderStatus, openWhatsApp } from '@/lib/orders';
+import { downloadInvoicePdf, printInvoice, uploadInvoiceToStorage } from '@/lib/invoice';
 import { formatPrice } from '@/lib/utils';
-import { Link } from 'wouter';
-import jsPDF from 'jspdf';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending:    { label: 'Pending',    color: 'text-yellow-700', bg: 'bg-yellow-100' },
@@ -19,15 +18,24 @@ const STATUS_KEYS = ['all', 'pending', 'confirmed', 'processing', 'shipped', 'de
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [actionMenu, setActionMenu] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<string | null>(null);
 
-  const reload = () => getAllOrders().then(setOrders);
+  const reload = async () => {
+    setLoading(true);
+    try {
+      setOrders(await getAllOrders());
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => { reload(); }, []);
 
-  const filtered = orders.filter(o => {
+  const filtered = orders.filter((o) => {
     const matchesFilter = filter === 'all' || o.status === filter;
     const q = search.toLowerCase();
     const matchesSearch = !q || o.orderId.toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q) || o.phone.includes(q);
@@ -45,22 +53,36 @@ export default function AdminOrders() {
     setActionMenu(null);
   };
 
+  const handleUploadInvoice = async (o: Order) => {
+    setUploading(o.orderId);
+    try {
+      const url = await uploadInvoiceToStorage(o);
+      if (url) {
+        setOrders((prev) =>
+          prev.map((x) => (x.orderId === o.orderId ? { ...x, invoiceUrl: url } : x)),
+        );
+      }
+    } finally {
+      setUploading(null);
+      setActionMenu(null);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-gray-900">Orders</h1>
-            <p className="text-gray-500 text-sm">{orders.length} total orders</p>
+            <p className="text-gray-500 text-sm">{orders.length} total · synced with Supabase</p>
           </div>
         </div>
 
-        {/* Filters */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4">
           <div className="flex gap-2 flex-wrap">
-            {STATUS_KEYS.map(key => {
+            {STATUS_KEYS.map((key) => {
               const cfg = key === 'all' ? null : STATUS_CONFIG[key];
-              const count = key === 'all' ? orders.length : orders.filter(o => o.status === key).length;
+              const count = key === 'all' ? orders.length : orders.filter((o) => o.status === key).length;
               return (
                 <button key={key} onClick={() => setFilter(key)}
                   className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${filter === key ? 'bg-black text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
@@ -71,14 +93,18 @@ export default function AdminOrders() {
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by Order ID or Customer name..."
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by Order ID or Customer name..."
               className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary" />
           </div>
         </div>
 
-        {/* Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="p-12 flex flex-col items-center gap-3 text-gray-500">
+              <Loader2 className="w-7 h-7 animate-spin text-primary" />
+              <p className="text-sm font-medium">Loading orders…</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="p-12 text-center text-gray-400">
               <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p className="font-medium">No orders found.</p>
@@ -88,13 +114,13 @@ export default function AdminOrders() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['Order ID', 'Date', 'Customer', 'Items', 'Total', 'Status', 'Actions'].map(h => (
+                    {['Order ID', 'Date', 'Customer', 'Items', 'Total', 'Invoice', 'Status', 'Actions'].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {filtered.map(o => {
+                  {filtered.map((o) => {
                     const cfg = STATUS_CONFIG[o.status] || STATUS_CONFIG.pending;
                     return (
                       <tr key={o.orderId} className="hover:bg-gray-50 transition-colors relative">
@@ -109,19 +135,31 @@ export default function AdminOrders() {
                         <td className="px-4 py-3 text-gray-600 text-xs">{o.items.length}</td>
                         <td className="px-4 py-3 font-bold text-xs">{formatPrice(o.grandTotal)}</td>
                         <td className="px-4 py-3">
+                          {o.invoiceUrl ? (
+                            <a href={o.invoiceUrl} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-1 rounded-full hover:bg-green-200">
+                              ✓ STORED
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
                           <span className={`text-[10px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
                         </td>
                         <td className="px-4 py-3 relative">
                           <div className="flex items-center gap-1">
-                            <Link href={`/admin/orders/${o.orderId}`} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors">
-                              <Eye className="w-3.5 h-3.5" />
-                            </Link>
+                            <button onClick={() => printInvoice(o)} title="Print invoice" className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors">
+                              <Printer className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => downloadInvoicePdf(o)} title="Download invoice PDF" className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors">
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
                             <div className="relative">
                               <button onClick={() => setActionMenu(actionMenu === o.orderId ? null : o.orderId)} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors flex items-center gap-1 text-xs font-medium">
                                 Actions <ChevronDown className="w-3 h-3" />
                               </button>
                               {actionMenu === o.orderId && (
-                                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 w-44 py-1 text-xs">
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 w-52 py-1 text-xs">
                                   {o.status === 'pending' && <>
                                     <button onClick={() => updateStatus(o.orderId, 'confirmed')} className="w-full px-3 py-2 text-left hover:bg-gray-50 text-green-700 font-semibold flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" /> Accept Order</button>
                                     <button onClick={() => updateStatus(o.orderId, 'cancelled')} className="w-full px-3 py-2 text-left hover:bg-gray-50 text-red-600 font-semibold flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" /> Decline Order</button>
@@ -130,6 +168,10 @@ export default function AdminOrders() {
                                   {o.status === 'processing' && <button onClick={() => updateStatus(o.orderId, 'shipped')} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Mark Shipped</button>}
                                   {o.status === 'shipped' && <button onClick={() => updateStatus(o.orderId, 'delivered')} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold text-green-700 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" /> Mark Delivered</button>}
                                   <div className="border-t border-gray-100 my-1" />
+                                  <button onClick={() => handleUploadInvoice(o)} disabled={uploading === o.orderId} className="w-full px-3 py-2 text-left hover:bg-gray-50 font-semibold text-blue-700 flex items-center gap-2 disabled:opacity-60">
+                                    {uploading === o.orderId ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+                                    {o.invoiceUrl ? 'Re-upload Invoice' : 'Upload Invoice to Storage'}
+                                  </button>
                                   <button onClick={() => whatsappCustomer(o, `Hi ${o.customerName}! Regarding your JB Jewellery order #${o.orderId} — Status: ${o.status}. Let us know if you have any questions! 💛`)} className="w-full px-3 py-2 text-left hover:bg-gray-50 text-green-600 font-semibold flex items-center gap-2">
                                     <MessageCircle className="w-3 h-3" /> WhatsApp
                                   </button>
@@ -148,7 +190,6 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Click outside to close action menu */}
       {actionMenu && <div className="fixed inset-0 z-10" onClick={() => setActionMenu(null)} />}
     </AdminLayout>
   );
