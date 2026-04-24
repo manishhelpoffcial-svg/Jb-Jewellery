@@ -7,6 +7,7 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { SiteSettingsProvider } from "@/context/SiteSettingsContext";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -42,6 +43,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminSettings from "./pages/admin/AdminSettings";
 import NotFound from "./pages/not-found";
 
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -86,6 +88,7 @@ function Router() {
       <Route path="/admin/products">{() => <RequireAdmin><AdminProducts /></RequireAdmin>}</Route>
       <Route path="/admin/customers">{() => <RequireAdmin><AdminCustomers /></RequireAdmin>}</Route>
       <Route path="/admin/coupons">{() => <RequireAdmin><AdminCoupons /></RequireAdmin>}</Route>
+      <Route path="/admin/settings">{() => <RequireAdmin><AdminSettings /></RequireAdmin>}</Route>
       <Route path="/admin">{() => <RequireAdmin><AdminDashboard /></RequireAdmin>}</Route>
 
       <Route component={NotFound} />
@@ -97,19 +100,21 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <AdminAuthProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                  <Router />
-                  <AuthModal />
-                  <CartDrawer />
-                </WouterRouter>
-              </WishlistProvider>
-            </CartProvider>
-          </AdminAuthProvider>
-        </AuthProvider>
+        <SiteSettingsProvider>
+          <AuthProvider>
+            <AdminAuthProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                    <Router />
+                    <AuthModal />
+                    <CartDrawer />
+                  </WouterRouter>
+                </WishlistProvider>
+              </CartProvider>
+            </AdminAuthProvider>
+          </AuthProvider>
+        </SiteSettingsProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

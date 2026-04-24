@@ -10,6 +10,7 @@ const NAV = [
   { label: 'Customers', icon: Users, href: '/admin/customers' },
   { label: 'Coupons', icon: Tag, href: '/admin/coupons' },
   { label: 'Analytics', icon: BarChart2, href: '/admin/analytics' },
+  { label: 'Settings', icon: Settings, href: '/admin/settings' },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {

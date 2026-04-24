@@ -14,7 +14,8 @@ Full-stack e-commerce site for JB Jewellery Collection built with React + Vite.
 - **Cart**: CartContext with clearCart, CartDrawer with checkout button → /checkout
 - **Checkout**: 3-step (Address → Review → WhatsApp) with coupon codes (JBFIRST/FLAT100/WELCOME20), tax (5%), and free shipping above ₹399
 - **Orders**: WhatsApp message builder, localStorage order storage, invoice PDF via jsPDF
-- **Admin Panel** (`/admin`): Dashboard with recharts, Orders management, Products CRUD, Customers view, Coupons management
+- **Admin Panel** (`/admin`): Dashboard with recharts, Orders management, Products CRUD, Customers view, Coupons management, Settings (SEO, Footer, Social links, Reviews)
+- **Site Settings** (`/admin/settings`): Manage SEO meta tags, footer info (about, address, location, phone, email, copyright), social links (Instagram/Facebook/WhatsApp/Twitter), and customer reviews. Stored in `localStorage` under `jb-site-settings`. Footer & Reviews components consume `useSiteSettings()` from `SiteSettingsContext`.
 - **My Orders** (`/my-orders`): Order history with status timeline, PDF invoice download, WhatsApp support
 
 ### Tech Stack

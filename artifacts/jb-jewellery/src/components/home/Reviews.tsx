@@ -1,23 +1,20 @@
 import React from 'react';
 import { Star, CheckCircle } from 'lucide-react';
-
-const reviews = [
-  { name: 'Riya S.', text: 'Absolutely love the quality! The pearl drop earrings look so premium. Fast delivery too.', initial: 'R' },
-  { name: 'Priya M.', text: 'Bought the 6 for 499 combo. Such a steal! The designs are exactly as shown in pictures.', initial: 'P' },
-  { name: 'Sneha K.', text: 'The chokers are so beautiful and lightweight. Wearing them daily to office.', initial: 'S' },
-  { name: 'Ananya R.', text: 'Great customer service and the packaging was so cute. Highly recommended!', initial: 'A' },
-];
+import { useSiteSettings } from '@/context/SiteSettingsContext';
 
 export function Reviews() {
+  const { settings } = useSiteSettings();
+  const { averageRating, totalCustomers, items } = settings.reviews;
+
   return (
     <section className="py-16 bg-[#FAFAFA]">
       <div className="container mx-auto px-4">
-        
+
         <div className="text-center max-w-lg mx-auto mb-12">
           <h2 className="text-3xl font-black mb-6">What Our Customers Say</h2>
-          
+
           <div className="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            {/* Fake Google Logo */}
+            {/* Google Logo */}
             <div className="flex items-center justify-center gap-2 mb-2">
                <svg className="w-6 h-6" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -27,19 +24,19 @@ export function Reviews() {
               </svg>
               <span className="font-bold text-gray-600">Reviews</span>
             </div>
-            
-            <div className="text-5xl font-black text-black mb-2">4.9</div>
+
+            <div className="text-5xl font-black text-black mb-2">{averageRating.toFixed(1)}</div>
             <div className="flex gap-1 text-primary mb-2">
               {[...Array(5)].map((_, i) => <Star key={i} className="fill-primary w-6 h-6" />)}
             </div>
-            <p className="text-sm text-gray-500 font-medium">Based on 10,000+ happy customers</p>
+            <p className="text-sm text-gray-500 font-medium">Based on {totalCustomers} happy customers</p>
           </div>
         </div>
 
         <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-8 snap-x">
-          {reviews.map((rev, i) => (
-            <div 
-              key={i} 
+          {items.map((rev) => (
+            <div
+              key={rev.id}
               className="bg-white border-l-4 border-primary rounded-xl p-6 shadow-sm min-w-[280px] sm:min-w-[320px] shrink-0 snap-center"
             >
               <div className="flex items-center gap-3 mb-4">
@@ -54,11 +51,11 @@ export function Reviews() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-1 text-primary mb-3">
-                {[...Array(5)].map((_, i) => <Star key={i} className="fill-primary w-3 h-3" />)}
+                {[...Array(rev.rating)].map((_, i) => <Star key={i} className="fill-primary w-3 h-3" />)}
               </div>
-              
+
               <p className="text-sm text-gray-600 italic leading-relaxed">"{rev.text}"</p>
             </div>
           ))}

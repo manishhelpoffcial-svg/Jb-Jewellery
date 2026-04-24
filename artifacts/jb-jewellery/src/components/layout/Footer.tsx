@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Facebook, Instagram, Twitter, Mail, MapPin, Phone, Loader2, CheckCircle } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Mail, MapPin, Phone, Loader2, CheckCircle, MessageCircle, ExternalLink } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useSiteSettings } from '@/context/SiteSettingsContext';
 
 export function Footer() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const { settings } = useSiteSettings();
+  const { footer, social } = settings;
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,26 +77,39 @@ export function Footer() {
             Premium fashion &amp; artificial jewellery designed to make you sparkle every day.
           </p>
           <div className="flex items-center gap-4 mt-6">
-            <a href="#" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-black transition-colors">
-              <Instagram className="w-5 h-5" />
-            </a>
-            <a href="#" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-black transition-colors">
-              <Facebook className="w-5 h-5" />
-            </a>
-            <a href="#" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-black transition-colors">
-              <Twitter className="w-5 h-5" />
-            </a>
+            {social.instagram && (
+              <a href={social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+                 className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-black transition-colors">
+                <Instagram className="w-5 h-5" />
+              </a>
+            )}
+            {social.facebook && (
+              <a href={social.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook"
+                 className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-black transition-colors">
+                <Facebook className="w-5 h-5" />
+              </a>
+            )}
+            {social.whatsapp && (
+              <a href={social.whatsapp} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+                 className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-green-500 hover:text-white transition-colors">
+                <MessageCircle className="w-5 h-5" />
+              </a>
+            )}
+            {social.twitter && (
+              <a href={social.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"
+                 className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-black transition-colors">
+                <Twitter className="w-5 h-5" />
+              </a>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12 border-t border-gray-50 pt-12">
           <div>
             <h3 className="font-bold mb-4 text-black">About JB</h3>
-            <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-              We bring you the finest collection of fashion jewellery. Handpicked designs that blend tradition with modern aesthetics.
-            </p>
+            <p className="text-sm text-gray-500 mb-4 leading-relaxed">{footer.aboutText}</p>
           </div>
-          
+
           <div>
             <h3 className="font-bold mb-4 text-black">Quick Links</h3>
             <ul className="space-y-3 text-sm text-gray-500">
@@ -103,7 +119,7 @@ export function Footer() {
               <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-bold mb-4 text-black">Shop By Category</h3>
             <ul className="space-y-3 text-sm text-gray-500">
@@ -113,28 +129,45 @@ export function Footer() {
               <li><a href="#" className="hover:text-primary transition-colors">Bridal Combos</a></li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-bold mb-4 text-black">Contact Us</h3>
             <ul className="space-y-3 text-sm text-gray-500">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>123 Jewellery Lane, Fashion District, Mumbai 400001</span>
+                <span>{footer.address}</span>
               </li>
-              <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 shrink-0" />
-                <span>+91 99999 99999</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 shrink-0" />
-                <span>hello@jbjewellery.com</span>
-              </li>
+              {footer.locationUrl && (
+                <li>
+                  <a
+                    href={footer.locationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-primary hover:underline font-semibold text-xs"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    View on Google Maps
+                  </a>
+                </li>
+              )}
+              {footer.phone && (
+                <li className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 shrink-0" />
+                  <a href={`tel:${footer.phone.replace(/\s+/g, '')}`} className="hover:text-primary">{footer.phone}</a>
+                </li>
+              )}
+              {footer.email && (
+                <li className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <a href={`mailto:${footer.email}`} className="hover:text-primary">{footer.email}</a>
+                </li>
+              )}
             </ul>
           </div>
         </div>
-        
+
         <div className="text-center pt-8 border-t border-gray-100 text-sm text-gray-400 font-medium">
-          © 2025 JB Jewellery Collection. All Rights Reserved.
+          {footer.copyrightText}
         </div>
       </div>
     </footer>
