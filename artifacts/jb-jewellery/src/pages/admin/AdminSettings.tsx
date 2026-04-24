@@ -16,24 +16,40 @@ const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?
 ];
 
 export default function AdminSettings() {
-  const { settings, setSettings } = useSiteSettings();
+  const { settings, setSettings, loading } = useSiteSettings();
   const [draft, setDraft] = useState<SiteSettings>(() => JSON.parse(JSON.stringify(settings)));
   const [tab, setTab] = useState<TabKey>('seo');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  // Re-sync the draft whenever the canonical settings change (e.g. after async load)
+  React.useEffect(() => {
+    setDraft(JSON.parse(JSON.stringify(settings)));
+  }, [settings]);
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(settings);
 
-  const save = () => {
-    setSettings(draft);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2200);
+  const save = async () => {
+    setSaving(true);
+    setErrMsg(null);
+    try {
+      await setSettings(draft);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2200);
+    } catch (err) {
+      setErrMsg(err instanceof Error ? err.message : 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const reset = () => {
+  const reset = async () => {
     if (!confirm('Reset all settings to defaults? This will discard your changes.')) return;
     const fresh = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
     setDraft(fresh);
-    setSettings(fresh);
+    setSaving(true);
+    try { await setSettings(fresh); } finally { setSaving(false); }
   };
 
   const update = <K extends keyof SiteSettings>(section: K, value: SiteSettings[K]) => {
@@ -57,17 +73,27 @@ export default function AdminSettings() {
             </button>
             <button
               onClick={save}
-              disabled={!dirty}
+              disabled={!dirty || saving}
               className="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-black hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <Save className="w-4 h-4" /> Save Changes
+              <Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save Changes'}
             </button>
           </div>
         </div>
 
+        {loading && !dirty && (
+          <div className="mb-6 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold">
+            Loading saved settings…
+          </div>
+        )}
         {saved && (
           <div className="mb-6 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-semibold flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" /> Settings saved successfully.
+            <CheckCircle className="w-4 h-4" /> Settings saved to database.
+          </div>
+        )}
+        {errMsg && (
+          <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-semibold">
+            {errMsg}
           </div>
         )}
 

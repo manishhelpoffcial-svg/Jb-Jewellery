@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Package, ArrowLeft, Download, MessageCircle, ChevronDown, ChevronUp, Printer, Loader2 } from 'lucide-react';
+import { Package, ArrowLeft, Download, MessageCircle, ChevronDown, ChevronUp, Printer, Loader2, Star, X, Upload, CheckCircle2 } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '@/context/AuthContext';
 import { getMyOrders, Order, openWhatsApp } from '@/lib/orders';
 import { downloadInvoicePdf, printInvoice } from '@/lib/invoice';
 import { formatPrice } from '@/lib/utils';
+import { customerReviewsApi, uploadsApi } from '@/lib/adminApi';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; step: number }> = {
   pending:    { label: 'Order Placed',  color: 'text-yellow-700', bg: 'bg-yellow-100', step: 1 },
@@ -17,11 +18,19 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 
 const TIMELINE_STEPS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
 
+interface ReviewModalState {
+  productId: string;
+  productName: string;
+  orderId: string;
+}
+
 export default function MyOrders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<ReviewModalState | null>(null);
+  const [reviewedKeys, setReviewedKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) return;
@@ -29,7 +38,20 @@ export default function MyOrders() {
     getMyOrders(user.uid)
       .then(setOrders)
       .finally(() => setLoading(false));
+    try {
+      const stored = localStorage.getItem(`jb-reviewed-${user.uid}`);
+      if (stored) setReviewedKeys(new Set(JSON.parse(stored)));
+    } catch { /* ignore */ }
   }, [user]);
+
+  const markReviewed = (orderId: string, productId: string) => {
+    if (!user) return;
+    const key = `${orderId}::${productId}`;
+    const next = new Set(reviewedKeys);
+    next.add(key);
+    setReviewedKeys(next);
+    try { localStorage.setItem(`jb-reviewed-${user.uid}`, JSON.stringify(Array.from(next))); } catch { /* ignore */ }
+  };
 
   const openStoredOrDownload = (order: Order) => {
     if (order.invoiceUrl) window.open(order.invoiceUrl, '_blank');
@@ -125,16 +147,35 @@ export default function MyOrders() {
                       <div>
                         <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-3">Items Ordered</p>
                         <div className="space-y-2">
-                          {order.items.map(item => (
-                            <div key={item.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-[#FFFBE6] to-[#FFF0B3] rounded-lg flex items-center justify-center shrink-0 text-sm font-black text-black/20">{item.name.charAt(0)}</div>
-                              <div className="flex-1">
-                                <p className="text-xs font-semibold">{item.name}</p>
-                                <p className="text-[10px] text-gray-400">Qty: {item.quantity}</p>
+                          {order.items.map(item => {
+                            const reviewedKey = `${order.orderId}::${item.id}`;
+                            const alreadyReviewed = reviewedKeys.has(reviewedKey);
+                            const canReview = order.status === 'delivered';
+                            return (
+                              <div key={item.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-[#FFFBE6] to-[#FFF0B3] rounded-lg flex items-center justify-center shrink-0 text-sm font-black text-black/20">{item.name.charAt(0)}</div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold truncate">{item.name}</p>
+                                  <p className="text-[10px] text-gray-400">Qty: {item.quantity}</p>
+                                </div>
+                                <span className="text-xs font-bold whitespace-nowrap">{formatPrice(item.price * item.quantity)}</span>
+                                {canReview && (
+                                  alreadyReviewed ? (
+                                    <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-1 rounded-full flex items-center gap-1 whitespace-nowrap">
+                                      <CheckCircle2 className="w-3 h-3" /> Reviewed
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => setReviewing({ productId: String(item.id), productName: item.name, orderId: order.orderId })}
+                                      className="text-[10px] font-bold bg-primary text-black px-2.5 py-1 rounded-full hover:bg-yellow-400 flex items-center gap-1 whitespace-nowrap"
+                                    >
+                                      <Star className="w-3 h-3" /> Review
+                                    </button>
+                                  )
+                                )}
                               </div>
-                              <span className="text-xs font-bold">{formatPrice(item.price * item.quantity)}</span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -172,6 +213,184 @@ export default function MyOrders() {
           </div>
         )}
       </div>
+
+      {reviewing && user && (
+        <ReviewModal
+          state={reviewing}
+          userName={user.name || user.email || 'Customer'}
+          userId={user.uid}
+          onClose={() => setReviewing(null)}
+          onDone={() => {
+            markReviewed(reviewing.orderId, reviewing.productId);
+            setReviewing(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function ReviewModal({
+  state, userName, userId, onClose, onDone,
+}: {
+  state: ReviewModalState;
+  userName: string;
+  userId: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [rating, setRating] = useState(5);
+  const [text, setText] = useState('');
+  const [name, setName] = useState(userName);
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const addImage = async (file: File) => {
+    if (images.length >= 2) {
+      setErr('Maximum 2 photos per review');
+      return;
+    }
+    setErr(null);
+    setUploading(true);
+    try {
+      const url = await uploadsApi.customerReviewImage(file);
+      setImages((prev) => [...prev, url]);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!name.trim()) { setErr('Please enter your name'); return; }
+    setErr(null);
+    setSubmitting(true);
+    try {
+      await customerReviewsApi.submit({
+        product_id: state.productId,
+        product_name: state.productName,
+        user_id: userId,
+        customer_name: name.trim(),
+        rating,
+        review_text: text.trim(),
+        images,
+      });
+      setSuccess(true);
+      setTimeout(onDone, 1300);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Failed to submit');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="px-5 py-4 border-b flex items-center justify-between sticky top-0 bg-white">
+          <div>
+            <h3 className="font-black text-base">Write a Review</h3>
+            <p className="text-xs text-gray-500 truncate max-w-[260px]">{state.productName}</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-4 h-4" /></button>
+        </div>
+
+        {success ? (
+          <div className="p-10 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            </div>
+            <p className="font-bold text-gray-900">Thanks for your review!</p>
+            <p className="text-sm text-gray-500 mt-1">It will appear once approved.</p>
+          </div>
+        ) : (
+          <div className="p-5 space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-2 block">Your Rating</label>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} onClick={() => setRating(n)} className="p-1">
+                    <Star className={`w-8 h-8 transition-colors ${n <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Display Name</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Your Review</label>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={4}
+                maxLength={2000}
+                placeholder="Tell others what you loved about this product…"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary resize-none"
+              />
+              <div className="text-[10px] text-gray-400 mt-1">{text.length}/2000</div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Add Photos (optional, max 2)</label>
+              <div className="flex flex-wrap gap-2 items-center">
+                {images.map((url, i) => (
+                  <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => setImages((p) => p.filter((_, j) => j !== i))}
+                      className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                {images.length < 2 && (
+                  <label className={`w-20 h-20 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-[10px] text-gray-400 cursor-pointer hover:border-primary hover:text-primary transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                    {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Upload className="w-4 h-4 mb-1" /> Photo</>}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) addImage(f);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {err && <p className="text-xs text-red-600 font-semibold bg-red-50 px-3 py-2 rounded-lg">{err}</p>}
+
+            <div className="flex gap-3 pt-2">
+              <button onClick={onClose} className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50">Cancel</button>
+              <button
+                onClick={submit}
+                disabled={submitting || uploading}
+                className="flex-1 py-3 bg-primary text-black font-bold rounded-xl hover:bg-yellow-400 flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4" />}
+                {submitting ? 'Submitting…' : 'Submit Review'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

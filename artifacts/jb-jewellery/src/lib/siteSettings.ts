@@ -1,3 +1,5 @@
+import { settingsApi } from './adminApi';
+
 export type Review = {
   id: string;
   name: string;
@@ -70,13 +72,16 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   },
 };
 
-const STORAGE_KEY = 'jb-site-settings';
+const CACHE_KEY = 'jb-site-settings-cache';
 
 function deepMerge<T>(base: T, override: Partial<T>): T {
   if (!override) return base;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const out: any = Array.isArray(base) ? [...(base as any)] : { ...(base as any) };
   for (const key of Object.keys(override) as (keyof T)[]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const baseVal: any = (base as any)[key];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const overrideVal: any = (override as any)[key];
     if (
       overrideVal &&
@@ -94,10 +99,11 @@ function deepMerge<T>(base: T, override: Partial<T>): T {
   return out as T;
 }
 
-export function loadSettings(): SiteSettings {
+/** Synchronous best-effort cache (used for initial render before API responds). */
+export function loadCachedSettings(): SiteSettings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw) as Partial<SiteSettings>;
     return deepMerge(DEFAULT_SETTINGS, parsed);
@@ -106,14 +112,23 @@ export function loadSettings(): SiteSettings {
   }
 }
 
-export function saveSettings(settings: SiteSettings) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  window.dispatchEvent(new CustomEvent('jb-settings-updated'));
+/** Authoritative load from Supabase via the API. */
+export async function fetchSettings(): Promise<SiteSettings> {
+  try {
+    const { settings } = await settingsApi.get();
+    const merged = deepMerge(DEFAULT_SETTINGS, settings as Partial<SiteSettings>);
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
+    return merged;
+  } catch {
+    return loadCachedSettings();
+  }
 }
 
-export function resetSettings() {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(STORAGE_KEY);
-  window.dispatchEvent(new CustomEvent('jb-settings-updated'));
+/** Persist to Supabase via the admin API. */
+export async function saveSettings(settings: SiteSettings) {
+  await settingsApi.save(settings as unknown as Record<string, unknown>);
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(settings)); } catch { /* ignore */ }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('jb-settings-updated'));
+  }
 }

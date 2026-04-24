@@ -1,31 +1,45 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { loadSettings, saveSettings as persist, SiteSettings, DEFAULT_SETTINGS } from '@/lib/siteSettings';
+import {
+  fetchSettings,
+  loadCachedSettings,
+  saveSettings as persist,
+  SiteSettings,
+  DEFAULT_SETTINGS,
+} from '@/lib/siteSettings';
 
 type Ctx = {
   settings: SiteSettings;
-  setSettings: (s: SiteSettings) => void;
-  reload: () => void;
+  setSettings: (s: SiteSettings) => Promise<void>;
+  reload: () => Promise<void>;
+  loading: boolean;
 };
 
 const SiteSettingsContext = createContext<Ctx>({
   settings: DEFAULT_SETTINGS,
-  setSettings: () => {},
-  reload: () => {},
+  setSettings: async () => {},
+  reload: async () => {},
+  loading: true,
 });
 
 export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettingsState] = useState<SiteSettings>(() => loadSettings());
+  const [settings, setSettingsState] = useState<SiteSettings>(() => loadCachedSettings());
+  const [loading, setLoading] = useState(true);
 
-  const reload = useCallback(() => setSettingsState(loadSettings()), []);
+  const reload = useCallback(async () => {
+    setLoading(true);
+    try {
+      const fresh = await fetchSettings();
+      setSettingsState(fresh);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const onUpdate = () => reload();
+    reload();
+    const onUpdate = () => { reload(); };
     window.addEventListener('jb-settings-updated', onUpdate);
-    window.addEventListener('storage', onUpdate);
-    return () => {
-      window.removeEventListener('jb-settings-updated', onUpdate);
-      window.removeEventListener('storage', onUpdate);
-    };
+    return () => window.removeEventListener('jb-settings-updated', onUpdate);
   }, [reload]);
 
   // Apply SEO meta tags to <head>
@@ -38,13 +52,13 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
     if (settings.seo.ogImage) setMetaProperty('og:image', settings.seo.ogImage);
   }, [settings.seo]);
 
-  const setSettings = (s: SiteSettings) => {
+  const setSettings = async (s: SiteSettings) => {
     setSettingsState(s);
-    persist(s);
+    await persist(s);
   };
 
   return (
-    <SiteSettingsContext.Provider value={{ settings, setSettings, reload }}>
+    <SiteSettingsContext.Provider value={{ settings, setSettings, reload, loading }}>
       {children}
     </SiteSettingsContext.Provider>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { LayoutDashboard, Package, ShoppingBag, Users, Tag, BarChart2, Settings, LogOut, Menu, X, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Tag, BarChart2, Settings, Star, LogOut, Menu, X, ChevronRight } from 'lucide-react';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 
 const NAV = [
@@ -9,6 +9,7 @@ const NAV = [
   { label: 'Products', icon: ShoppingBag, href: '/admin/products' },
   { label: 'Customers', icon: Users, href: '/admin/customers' },
   { label: 'Coupons', icon: Tag, href: '/admin/coupons' },
+  { label: 'Reviews', icon: Star, href: '/admin/reviews' },
   { label: 'Analytics', icon: BarChart2, href: '/admin/analytics' },
   { label: 'Settings', icon: Settings, href: '/admin/settings' },
 ];

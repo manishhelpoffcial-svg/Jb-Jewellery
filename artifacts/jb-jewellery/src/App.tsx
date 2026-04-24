@@ -44,6 +44,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminProductReviews from "./pages/admin/AdminProductReviews";
 import NotFound from "./pages/not-found";
 
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -89,6 +90,7 @@ function Router() {
       <Route path="/admin/customers">{() => <RequireAdmin><AdminCustomers /></RequireAdmin>}</Route>
       <Route path="/admin/coupons">{() => <RequireAdmin><AdminCoupons /></RequireAdmin>}</Route>
       <Route path="/admin/settings">{() => <RequireAdmin><AdminSettings /></RequireAdmin>}</Route>
+      <Route path="/admin/reviews">{() => <RequireAdmin><AdminProductReviews /></RequireAdmin>}</Route>
       <Route path="/admin">{() => <RequireAdmin><AdminDashboard /></RequireAdmin>}</Route>
 
       <Route component={NotFound} />

@@ -65,10 +65,28 @@ export interface SbProduct {
   rating: number;
   reviews: number;
   image: string | null;
+  images: string[];
   is_new: boolean;
   is_bestseller: boolean;
   stock: number;
   description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SbProductReview {
+  id: string;
+  product_id: string;
+  product_name: string | null;
+  user_id: string | null;
+  customer_name: string;
+  customer_initial: string | null;
+  rating: number;
+  review_text: string;
+  images: string[];
+  is_visible: boolean;
+  is_verified: boolean;
+  source: 'customer' | 'admin';
   created_at: string;
   updated_at: string;
 }
@@ -212,3 +230,125 @@ export const adminApi = {
   // Dashboard
   dashboard: () => req<SbDashboard>('/dashboard'),
 };
+
+// ── Uploads ──────────────────────────────────────────────────────────────────
+async function uploadImage(endpoint: string, file: File): Promise<string> {
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1] || '');
+    r.onerror = () => reject(new Error('Failed to read file'));
+    r.readAsDataURL(file);
+  });
+  const r = await fetch(`/jb-api${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+    },
+    body: JSON.stringify({ base64, filename: file.name, mime: file.type }),
+  });
+  const data = (await r.json().catch(() => ({}))) as { url?: string; error?: string };
+  if (!r.ok || !data.url) throw new Error(data.error || 'Upload failed');
+  return data.url;
+}
+
+async function uploadImagePublic(endpoint: string, file: File): Promise<string> {
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ''));
+    r.onerror = () => reject(new Error('Could not read file'));
+    r.readAsDataURL(file);
+  });
+  const r = await fetch(`/jb-api${endpoint}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ base64, filename: file.name, mime: file.type }),
+  });
+  const data = (await r.json().catch(() => ({}))) as { url?: string; error?: string };
+  if (!r.ok || !data.url) throw new Error(data.error || 'Upload failed');
+  return data.url;
+}
+
+export const uploadsApi = {
+  productImage: (file: File) => uploadImage('/uploads/product-image', file),
+  adminReviewImage: (file: File) => uploadImage('/uploads/admin/review-image', file),
+  customerReviewImage: (file: File) => uploadImagePublic('/uploads/review-image', file),
+};
+
+// ── Customer-facing reviews API (no admin token) ────────────────────────────
+export interface CustomerReviewSubmission {
+  product_id: string;
+  product_name?: string;
+  user_id?: string;
+  customer_name: string;
+  rating: number;
+  review_text?: string;
+  images?: string[];
+}
+
+export const customerReviewsApi = {
+  listForProduct: async (productId: string): Promise<{ reviews: SbProductReview[] }> => {
+    const r = await fetch(`/jb-api/product-reviews/product/${encodeURIComponent(productId)}`);
+    if (!r.ok) throw new Error('Failed to load reviews');
+    return r.json();
+  },
+  submit: async (body: CustomerReviewSubmission): Promise<{ review: SbProductReview }> => {
+    const r = await fetch('/jb-api/product-reviews', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = (await r.json().catch(() => ({}))) as { review?: SbProductReview; error?: string };
+    if (!r.ok || !data.review) throw new Error(data.error || 'Failed to submit review');
+    return { review: data.review };
+  },
+};
+
+// ── Site settings ────────────────────────────────────────────────────────────
+export const settingsApi = {
+  get: async (): Promise<{ settings: Record<string, unknown>; updated_at: string | null }> => {
+    const r = await fetch('/jb-api/site-settings');
+    if (!r.ok) throw new Error('Failed to load site settings');
+    return r.json();
+  },
+  save: async (settings: Record<string, unknown>) => {
+    const r = await fetch('/jb-api/site-settings', {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json',
+        'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      },
+      body: JSON.stringify({ settings }),
+    });
+    const data = (await r.json().catch(() => ({}))) as { error?: string };
+    if (!r.ok) throw new Error(data.error || 'Failed to save settings');
+    return { ok: true };
+  },
+};
+
+// ── Product reviews (admin) ──────────────────────────────────────────────────
+async function adminReviewReq<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const r = await fetch(`/jb-api/product-reviews${path}`, {
+    ...init,
+    headers: {
+      'content-type': 'application/json',
+      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      ...(init.headers || {}),
+    },
+  });
+  const data = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!r.ok) throw new Error((data.error as string) || 'Request failed');
+  return data as T;
+}
+
+export const productReviewsApi = {
+  list: (productId?: string) =>
+    adminReviewReq<{ reviews: SbProductReview[] }>(productId ? `?product_id=${encodeURIComponent(productId)}` : ''),
+  add: (body: Partial<SbProductReview>) =>
+    adminReviewReq<{ review: SbProductReview }>('/admin', { method: 'POST', body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<SbProductReview>) =>
+    adminReviewReq<{ review: SbProductReview }>(`/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  remove: (id: string) =>
+    adminReviewReq<{ success: true }>(`/${id}`, { method: 'DELETE' }),
+};
+
