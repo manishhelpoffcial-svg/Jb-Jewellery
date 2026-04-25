@@ -68,6 +68,27 @@ router.post("/product-image", simpleAdminMiddleware, async (req: Request, res: R
   }
 });
 
+// Admin: upload category image
+router.post("/category-image", simpleAdminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { base64, filename, mime } = req.body as { base64?: string; filename?: string; mime?: string };
+    if (!base64) {
+      res.status(400).json({ error: "base64 is required" });
+      return;
+    }
+    const url = await uploadToBucket(
+      "categories",
+      "categories",
+      filename || "image.jpg",
+      base64,
+      mime || "image/jpeg",
+    );
+    res.json({ url });
+  } catch (err: unknown) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "Upload failed" });
+  }
+});
+
 // Admin: upload review image (admin-added reviews, e.g. from AdminProductReviews)
 router.post("/admin/review-image", simpleAdminMiddleware, async (req: Request, res: Response) => {
   try {

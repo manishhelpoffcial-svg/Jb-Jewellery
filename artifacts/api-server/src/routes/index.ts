@@ -11,6 +11,7 @@ import adminSupabaseRouter from "./admin-supabase.js";
 import uploadsRouter from "./uploads.js";
 import siteSettingsRouter from "./site-settings.js";
 import productReviewsRouter from "./product-reviews.js";
+import categoriesRouter from "./categories.js";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use("/sb-admin", adminSupabaseRouter);
 router.use("/uploads", uploadsRouter);
 router.use("/site-settings", siteSettingsRouter);
 router.use("/product-reviews", productReviewsRouter);
+router.use("/categories", categoriesRouter);
 
 export default router;

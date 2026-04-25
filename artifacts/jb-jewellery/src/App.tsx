@@ -45,6 +45,8 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminProductReviews from "./pages/admin/AdminProductReviews";
+import AdminCategories from "./pages/admin/AdminCategories";
+import CategoryPage from "./pages/CategoryPage";
 import NotFound from "./pages/not-found";
 
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -69,6 +71,7 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-success" component={OrderSuccess} />
       <Route path="/my-orders" component={MyOrders} />
+      <Route path="/category/:slug" component={CategoryPage} />
 
       {/* Profile Section */}
       <Route path="/profile" component={ProfilePage} />
@@ -91,6 +94,7 @@ function Router() {
       <Route path="/admin/coupons">{() => <RequireAdmin><AdminCoupons /></RequireAdmin>}</Route>
       <Route path="/admin/settings">{() => <RequireAdmin><AdminSettings /></RequireAdmin>}</Route>
       <Route path="/admin/reviews">{() => <RequireAdmin><AdminProductReviews /></RequireAdmin>}</Route>
+      <Route path="/admin/categories">{() => <RequireAdmin><AdminCategories /></RequireAdmin>}</Route>
       <Route path="/admin">{() => <RequireAdmin><AdminDashboard /></RequireAdmin>}</Route>
 
       <Route component={NotFound} />

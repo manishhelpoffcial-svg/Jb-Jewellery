@@ -273,6 +273,75 @@ export const uploadsApi = {
   productImage: (file: File) => uploadImage('/uploads/product-image', file),
   adminReviewImage: (file: File) => uploadImage('/uploads/admin/review-image', file),
   customerReviewImage: (file: File) => uploadImagePublic('/uploads/review-image', file),
+  categoryImage: (file: File) => uploadImage('/uploads/category-image', file),
+};
+
+// ── Categories ──────────────────────────────────────────────────────────────
+export type CategoryType = 'main' | 'vibe' | 'price' | 'combo';
+
+export interface SbCategory {
+  id: string;
+  slug: string;
+  name: string;
+  type: CategoryType;
+  image: string | null;
+  subtitle: string | null;
+  description: string | null;
+  product_category: string | null;
+  max_price: number | null;
+  combo_count: number | null;
+  combo_price: number | null;
+  combo_extra: string | null;
+  is_visible: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  product_ids?: string[];
+}
+
+export const categoriesApi = {
+  // Public
+  listPublic: async (type?: CategoryType): Promise<{ categories: SbCategory[] }> => {
+    const r = await fetch(`/jb-api/categories${type ? `?type=${type}` : ''}`);
+    if (!r.ok) throw new Error('Failed to load categories');
+    return r.json();
+  },
+  getBySlug: async (slug: string): Promise<{ category: SbCategory; products: SbProduct[] }> => {
+    const r = await fetch(`/jb-api/categories/${encodeURIComponent(slug)}`);
+    const data = (await r.json().catch(() => ({}))) as { category?: SbCategory; products?: SbProduct[]; error?: string };
+    if (!r.ok || !data.category) throw new Error(data.error || 'Failed to load category');
+    return { category: data.category, products: data.products || [] };
+  },
+};
+
+// Use direct admin fetch for admin category endpoints (different prefix)
+async function catAdminReq<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const r = await fetch(`/jb-api/categories${path}`, {
+    ...init,
+    headers: {
+      'content-type': 'application/json',
+      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      ...(init.headers || {}),
+    },
+  });
+  const data = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!r.ok) throw new Error((data.error as string) || 'Request failed');
+  return data as T;
+}
+
+export const adminCategoriesApi = {
+  list: () => catAdminReq<{ categories: SbCategory[] }>('/admin/list'),
+  create: (body: Partial<SbCategory>) =>
+    catAdminReq<{ category: SbCategory }>('/admin', { method: 'POST', body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<SbCategory>) =>
+    catAdminReq<{ category: SbCategory }>(`/admin/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  remove: (id: string) =>
+    catAdminReq<{ success: true }>(`/admin/${id}`, { method: 'DELETE' }),
+  setProducts: (id: string, productIds: string[]) =>
+    catAdminReq<{ success: true; count: number }>(`/admin/${id}/products`, {
+      method: 'PUT',
+      body: JSON.stringify({ product_ids: productIds }),
+    }),
 };
 
 // ── Customer-facing reviews API (no admin token) ────────────────────────────

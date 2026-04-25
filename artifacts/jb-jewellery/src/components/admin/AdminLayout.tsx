@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { LayoutDashboard, Package, ShoppingBag, Users, Tag, BarChart2, Settings, Star, LogOut, Menu, X, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Tag, BarChart2, Settings, Star, Layers, LogOut, Menu, X, ChevronRight } from 'lucide-react';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 
 const NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
   { label: 'Orders', icon: Package, href: '/admin/orders' },
   { label: 'Products', icon: ShoppingBag, href: '/admin/products' },
+  { label: 'Categories', icon: Layers, href: '/admin/categories' },
   { label: 'Customers', icon: Users, href: '/admin/customers' },
   { label: 'Coupons', icon: Tag, href: '/admin/coupons' },
   { label: 'Reviews', icon: Star, href: '/admin/reviews' },
