@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { supabaseAdmin, isSupabaseAdminConfigured } from "./supabaseAdmin.js";
 
-const ZOHO_EMAIL = process.env.ZOHO_EMAIL || "";
+export const ZOHO_EMAIL = process.env.ZOHO_EMAIL || "";
 const ZOHO_APP_PASSWORD = process.env.ZOHO_APP_PASSWORD || "";
 export const ADMIN_EMAIL = "amritabiswas7432@gmail.com";
 
@@ -30,7 +30,7 @@ export function shortOrderId(id: string) {
   return id.slice(0, 8).toUpperCase();
 }
 
-function publicBaseUrl(): string {
+export function publicBaseUrl(): string {
   if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, "");
   if (process.env.REPLIT_DEV_DOMAIN) return `https://${process.env.REPLIT_DEV_DOMAIN}`;
   return "";
@@ -93,7 +93,7 @@ export async function buildWhatsappPayLink(order: {
 }
 
 // ── Inline SVG icons (email-safe, monochrome) ────────────────────────────────
-const icon = {
+export const icon = {
   receipt: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2l-3 2-3-2-3 2-3-2-3 2z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>`,
   check: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   truck: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
@@ -108,12 +108,12 @@ const icon = {
   view: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
 };
 
-function iconCircle(svg: string, bg: string) {
+export function iconCircle(svg: string, bg: string) {
   return `<div style="width:64px;height:64px;background:${bg};border-radius:50%;display:inline-block;line-height:64px;text-align:center;margin-bottom:14px;"><span style="display:inline-block;vertical-align:middle;line-height:0;">${svg}</span></div>`;
 }
 
 // Email-safe button using bulletproof table layout
-function buttonLink(opts: { href: string; bg: string; color: string; label: string; iconSvg?: string }) {
+export function buttonLink(opts: { href: string; bg: string; color: string; label: string; iconSvg?: string }) {
   const inner = opts.iconSvg
     ? `<span style="display:inline-block;vertical-align:middle;line-height:0;margin-right:8px;">${opts.iconSvg}</span><span style="display:inline-block;vertical-align:middle;">${opts.label}</span>`
     : opts.label;
@@ -122,7 +122,7 @@ function buttonLink(opts: { href: string; bg: string; color: string; label: stri
   </td></tr></table>`;
 }
 
-function emailBase(content: string) {
+export function emailBase(content: string) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

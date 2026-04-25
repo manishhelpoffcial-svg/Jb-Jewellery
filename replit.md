@@ -127,3 +127,17 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+
+## Email Templates
+
+The API server ships **38 email templates** total, all rendered via the shared `emailBase` shell using inline CSS, table layouts and inline SVG icons (no emojis), so they render correctly in every major email client.
+
+- `artifacts/api-server/src/lib/mailer.ts` — Zoho SMTP transport (`smtp.zoho.in:465`), shared primitives (`emailBase`, `iconCircle`, `buttonLink`, `icon`, `formatPrice`), and the original 7 transactional templates: `order_received` (full invoice), `admin_new_order`, `order_confirmed`, `order_shipped`, `order_delivered`, `new_arrival`, `restock`.
+- `artifacts/api-server/src/lib/mailer-templates.ts` — generic `renderGenericEmail(opts)` builder + `TEMPLATE_REGISTRY` of 31 additional templates: `welcome`, `otp_verification`, `order_confirmation`, `payment_success`, `payment_failed`, `invoice_receipt`, `shipping_dispatch`, `out_for_delivery`, `delivered_v2`, `order_cancelled`, `refund_initiated`, `refund_completed`, `return_request`, `exchange_request`, `abandoned_cart`, `promotional_offer`, `discount_coupon`, `new_arrival_v2`, `review_request`, `wishlist_reminder`, `back_in_stock`, `low_stock_customer`, `password_reset`, `password_changed`, `login_alert`, `support_reply`, `contact_response`, `newsletter_subscription`, `unsubscribe_confirmation`, `admin_low_stock`, `admin_new_signup`. Also exports a 12-hour login-alert cooldown (`shouldSendLoginAlert` / `markLoginAlertSent`, in-memory `Map`) and convenience senders (`sendWelcomeEmail`, `sendLoginAlertEmail`, `sendPasswordResetEmail`, `sendPasswordChangedEmail`, `sendAdminNewSignupEmail`).
+- `artifacts/api-server/src/routes/email-templates.ts` — admin endpoints (`GET /api/admin/email-templates`, `GET /:key/preview`, `POST /:key/send`) protected by `simpleAdminMiddleware`. Lists legacy + registry templates side by side. Powers the admin Email page at `/admin/email`.
+- `artifacts/api-server/src/routes/auth.ts` — wires the new flows:
+  - `POST /api/auth/register` → fires welcome email + admin new-signup alert.
+  - `POST /api/auth/login` → fires login-alert email (with 12 h cooldown, skipped for admin role) including IP and user-agent.
+  - `PATCH /api/auth/password` → fires password-changed alert.
+  - `POST /api/auth/forgot-password` → always returns 200 (non-enumeration), emails a 30-minute one-time reset link via `crypto.randomBytes` (in-memory token store).
+  - `POST /api/auth/reset-password` → consumes token, updates password, emails a password-changed alert.
