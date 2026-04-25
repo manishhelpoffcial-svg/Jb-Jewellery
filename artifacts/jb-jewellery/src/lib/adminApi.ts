@@ -421,3 +421,38 @@ export const productReviewsApi = {
     adminReviewReq<{ success: true }>(`/${id}`, { method: 'DELETE' }),
 };
 
+
+// ── Email Templates (admin) ─────────────────────────────────────────────────
+async function emailReq<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const r = await fetch(`/jb-api/admin/email-templates${path}`, {
+    ...init,
+    headers: {
+      'content-type': 'application/json',
+      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      ...(init.headers || {}),
+    },
+  });
+  const data = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!r.ok) throw new Error((data.error as string) || 'Request failed');
+  return data as T;
+}
+
+export interface EmailTemplateMeta {
+  key: string;
+  name: string;
+  description: string;
+  category: 'Customer' | 'Admin' | 'Marketing';
+  defaultSubject: string;
+  audience: string;
+}
+
+export const emailTemplatesApi = {
+  list: () => emailReq<{ templates: EmailTemplateMeta[] }>(''),
+  preview: (key: string) =>
+    emailReq<{ template: EmailTemplateMeta; html: string }>(`/${encodeURIComponent(key)}/preview`),
+  send: (key: string, body: { email: string; subject?: string }) =>
+    emailReq<{ success: true; sentTo: string }>(`/${encodeURIComponent(key)}/send`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+};

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { query } from "../lib/db.js";
+import { supabaseAdmin, isSupabaseAdminConfigured } from "../lib/supabaseAdmin.js";
 import { authMiddleware, adminMiddleware, type JwtPayload } from "../lib/auth.js";
 import {
   sendOrderConfirmation,
@@ -8,11 +9,66 @@ import {
   sendOrderConfirmedEmail,
   sendOrderShippedEmail,
   sendOrderDeliveredEmail,
+  renderInvoiceStandaloneHtml,
+  shortOrderId,
   ADMIN_EMAIL,
 } from "../lib/mailer.js";
 import type { Request, Response } from "express";
 
 const router = Router();
+
+// Look up an order in either Supabase (`orders`) or local pg (`jb_orders`).
+async function findOrderById(id: string): Promise<Record<string, unknown> | null> {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const { data } = await supabaseAdmin.from("orders").select("*").eq("id", id).maybeSingle();
+      if (data) return data as Record<string, unknown>;
+    } catch {
+      /* fall through to pg */
+    }
+  }
+  try {
+    const result = await query("SELECT * FROM jb_orders WHERE id = $1", [id]);
+    if (result.rows.length > 0) return result.rows[0];
+  } catch {
+    /* table may not exist */
+  }
+  return null;
+}
+
+// ── Public Invoice (HTML, no auth — discoverable by UUID) ────────────────────
+router.get("/:id/invoice", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const o = await findOrderById(id);
+    if (!o) {
+      res.status(404).type("html").send("<h1>Invoice not found</h1>");
+      return;
+    }
+    const html = renderInvoiceStandaloneHtml({
+      id: String(o.id),
+      customer_name: String(o.customer_name || ""),
+      email: String(o.email || ""),
+      phone: String(o.phone || ""),
+      items: Array.isArray(o.items) ? (o.items as Array<{ name: string; quantity: number; price: number }>) : [],
+      address: (o.address && typeof o.address === "object" ? o.address : {}) as Record<string, string>,
+      subtotal: Number(o.subtotal),
+      shipping: Number(o.shipping),
+      discount: Number(o.discount),
+      grand_total: Number(o.grand_total),
+      coupon_code: typeof o.coupon_code === "string" ? o.coupon_code : undefined,
+      created_at: String(o.created_at),
+      status: typeof o.status === "string" ? o.status : undefined,
+    });
+    if (req.query.download) {
+      res.setHeader("Content-Disposition", `attachment; filename="invoice-${shortOrderId(id)}.html"`);
+    }
+    res.type("html").send(html);
+  } catch (err) {
+    console.error(err);
+    res.status(500).type("html").send("<h1>Could not load invoice</h1>");
+  }
+});
 
 // ── Create Order ──────────────────────────────────────────────────────────────
 router.post("/", authMiddleware, async (req: Request, res: Response) => {
