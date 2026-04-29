@@ -173,7 +173,7 @@ router.get("/:key/preview", simpleAdminMiddleware, async (req: Request, res: Res
     if (!res.headersSent) res.status(404).json({ error: "Template not found" });
     return;
   }
-  res.json(result);
+  res.json({ template: result.meta, meta: result.meta, html: result.html });
 });
 
 router.post("/:key/send", simpleAdminMiddleware, async (req: Request, res: Response) => {
