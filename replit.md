@@ -141,3 +141,15 @@ The API server ships **38 email templates** total, all rendered via the shared `
   - `PATCH /api/auth/password` → fires password-changed alert.
   - `POST /api/auth/forgot-password` → always returns 200 (non-enumeration), emails a 30-minute one-time reset link via `crypto.randomBytes` (in-memory token store).
   - `POST /api/auth/reset-password` → consumes token, updates password, emails a password-changed alert.
+
+## Tax Invoices & Custom Invoicing (Apr 2026)
+
+- `artifacts/api-server/src/lib/mailer.ts` — adds `BusinessSettings`, `getBusinessSettings()`, `clearSettingsCache()`, and a Myntra-style **Tax Invoice** renderer (`renderTaxInvoiceHtml(invoice, business)`) with full GSTIN/HSN/CGST-SGST-IGST split, Bill To / Ship To / Bill From / Ship From blocks, computed taxable amount, declaration footer and authorized-signatory section. Inter-state vs intra-state is auto-derived from buyer state code vs `business.billFromStateCode`. `computeInvoice()` exposes the line-item maths (taxable amount, CGST/SGST/IGST split, totals). `renderOrderTaxInvoice(order, business)` is a thin adapter that turns an existing order into a tax-invoice and is now used by `GET /api/orders/:id/invoice`.
+- `artifacts/api-server/src/routes/uploads.ts` — adds `POST /api/uploads/brand-asset` (admin-gated) for uploading the brand logo / signature into the `site-assets` Supabase storage bucket (auto-created on first use via `ensureBucket`).
+- `artifacts/api-server/src/routes/invoices.ts` — new admin endpoints:
+  - `POST /api/admin/invoices/preview` → returns rendered invoice HTML + invoice number.
+  - `POST /api/admin/invoices/send` → renders + emails the invoice to the customer (with the invoice attached as `tax-invoice-<number>.html`). Both protected by `simpleAdminMiddleware`.
+- `artifacts/jb-jewellery/src/lib/siteSettings.ts` — `SiteSettings.business` section: `brandName`, `legalName`, `logoUrl`, `gstin`, `pan`, `cin`, `enableGst`, `defaultGstRate`, `defaultHsn`, `taxInclusive`, `billFromAddress`, `billFromState`, `billFromStateCode`, `shipFromAddress`, `signatoryName`, `supportPhone`, `supportEmail`, `contactUsUrl`, `invoicePrefix`, `declaration`. `deepMerge` keeps the section optional in stored Supabase data.
+- `artifacts/jb-jewellery/src/pages/admin/AdminSettings.tsx` — new **Invoice & GST** tab with logo upload, GSTIN/PAN/CIN, default tax rate / HSN, tax-inclusive toggle, Bill From/Ship From + state code dropdown, signatory + customer-care fields and declaration text.
+- `artifacts/jb-jewellery/src/pages/admin/AdminCreateInvoice.tsx` — new admin page (route `/admin/invoices/new`, nav label "Create Invoice", icon `Receipt`) for building a custom invoice (Bill To/Ship To, line items with HSN + GST%, shipping, notes), with live totals, **Preview** (opens rendered HTML in new tab) and **Send Invoice** (emails to customer).
+- `artifacts/jb-jewellery/src/lib/adminApi.ts` — `uploadBrandAsset(file, kind)` and `invoicesApi.preview/send` helpers.

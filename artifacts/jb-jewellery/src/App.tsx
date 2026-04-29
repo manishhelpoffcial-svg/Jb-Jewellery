@@ -47,6 +47,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminProductReviews from "./pages/admin/AdminProductReviews";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminEmail from "./pages/admin/AdminEmail";
+import AdminCreateInvoice from "./pages/admin/AdminCreateInvoice";
 import CategoryPage from "./pages/CategoryPage";
 import NotFound from "./pages/not-found";
 
@@ -97,6 +98,7 @@ function Router() {
       <Route path="/admin/reviews">{() => <RequireAdmin><AdminProductReviews /></RequireAdmin>}</Route>
       <Route path="/admin/categories">{() => <RequireAdmin><AdminCategories /></RequireAdmin>}</Route>
       <Route path="/admin/email">{() => <RequireAdmin><AdminEmail /></RequireAdmin>}</Route>
+      <Route path="/admin/invoices/new">{() => <RequireAdmin><AdminCreateInvoice /></RequireAdmin>}</Route>
       <Route path="/admin">{() => <RequireAdmin><AdminDashboard /></RequireAdmin>}</Route>
 
       <Route component={NotFound} />

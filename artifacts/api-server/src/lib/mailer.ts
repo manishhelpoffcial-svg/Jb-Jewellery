@@ -46,10 +46,43 @@ export function invoiceDownloadUrl(orderId: string): string {
 }
 
 // ── Site settings (cached for 60s) ───────────────────────────────────────────
+export type BusinessSettings = {
+  brandName?: string;
+  legalName?: string;
+  logoUrl?: string;
+  gstin?: string;
+  pan?: string;
+  cin?: string;
+  enableGst?: boolean;
+  defaultGstRate?: number;
+  defaultHsn?: string;
+  taxInclusive?: boolean;
+  billFromAddress?: string;
+  billFromState?: string;
+  billFromStateCode?: string;
+  shipFromAddress?: string;
+  signatoryName?: string;
+  supportPhone?: string;
+  supportEmail?: string;
+  contactUsUrl?: string;
+  invoicePrefix?: string;
+  declaration?: string;
+};
+
 type SiteSettingsShape = {
   social?: { whatsapp?: string };
   footer?: { phone?: string; email?: string; address?: string };
+  business?: BusinessSettings;
 };
+
+export async function getBusinessSettings(): Promise<BusinessSettings> {
+  const s = await getSiteSettings();
+  return s.business || {};
+}
+
+export function clearSettingsCache() {
+  _settingsCache = null;
+}
 
 let _settingsCache: { data: SiteSettingsShape; ts: number } | null = null;
 
@@ -679,6 +712,491 @@ export function renderInvoiceStandaloneHtml(order: OrderEmailData & { status?: s
   </div>
 </body>
 </html>`;
+}
+
+// ── 9. Myntra-style GST Tax Invoice ──────────────────────────────────────────
+export type TaxInvoiceParty = {
+  name: string;
+  address: string;
+  state?: string;
+  stateCode?: string;
+  gstin?: string;
+  phone?: string;
+  email?: string;
+  customerType?: string; // "Unregistered" | "Registered"
+};
+
+export type TaxInvoiceLine = {
+  description: string;
+  hsn?: string;
+  qty: number;
+  /** Unit price (per Myntra: this is the gross/MRP per unit, inclusive of tax if business.taxInclusive). */
+  unitPrice: number;
+  discount?: number; // total discount on this line (across all qty)
+  otherCharges?: number;
+  gstRate?: number; // % e.g. 3
+};
+
+export type TaxInvoiceData = {
+  invoiceNumber: string;
+  invoiceDate: string; // ISO
+  orderNumber?: string;
+  orderDate?: string; // ISO
+  natureOfSupply?: string;
+  placeOfSupply?: string;
+  paymentMethod?: string;
+  billTo: TaxInvoiceParty;
+  shipTo: TaxInvoiceParty;
+  lines: TaxInvoiceLine[];
+  shipping?: number; // extra shipping line at the bottom
+  notes?: string;
+  status?: string;
+};
+
+export type ComputedLine = TaxInvoiceLine & {
+  gross: number;
+  discount: number;
+  other: number;
+  lineTotal: number;
+  taxableAmount: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  cgstRate: number;
+  sgstRate: number;
+  igstRate: number;
+};
+
+function fmt2(n: number) {
+  return Number.isFinite(n) ? n.toFixed(2) : "0.00";
+}
+
+function inrFmt(n: number) {
+  return `₹${fmt2(n)}`;
+}
+
+function isInterState(buyerStateCode: string | undefined, sellerStateCode: string | undefined): boolean {
+  if (!buyerStateCode || !sellerStateCode) return false; // default to intra (CGST+SGST) if unknown
+  return buyerStateCode.trim() !== sellerStateCode.trim();
+}
+
+export function computeInvoice(invoice: TaxInvoiceData, business: BusinessSettings) {
+  const taxInclusive = business.taxInclusive !== false; // default true
+  const enableGst = business.enableGst !== false; // default true
+  const inter = isInterState(invoice.billTo.stateCode, business.billFromStateCode);
+
+  const lines: ComputedLine[] = invoice.lines.map((l) => {
+    const qty = Math.max(0, Number(l.qty) || 0);
+    const unit = Math.max(0, Number(l.unitPrice) || 0);
+    const gross = +(unit * qty).toFixed(2);
+    const discount = +Math.max(0, Number(l.discount) || 0).toFixed(2);
+    const other = +Math.max(0, Number(l.otherCharges) || 0).toFixed(2);
+    const rate = enableGst ? Math.max(0, Number(l.gstRate ?? business.defaultGstRate ?? 0)) : 0;
+
+    let lineTotal: number;
+    let taxableAmount: number;
+    let totalTax: number;
+
+    if (taxInclusive) {
+      // gross/MRP is inclusive of GST. Total = gross - discount + other (still inclusive).
+      lineTotal = +(gross - discount + other).toFixed(2);
+      taxableAmount = +(lineTotal / (1 + rate / 100)).toFixed(2);
+      totalTax = +(lineTotal - taxableAmount).toFixed(2);
+    } else {
+      // gross is exclusive of GST. Total = (gross - discount + other) + tax
+      taxableAmount = +(gross - discount + other).toFixed(2);
+      totalTax = +(taxableAmount * (rate / 100)).toFixed(2);
+      lineTotal = +(taxableAmount + totalTax).toFixed(2);
+    }
+
+    let cgst = 0, sgst = 0, igst = 0;
+    let cgstRate = 0, sgstRate = 0, igstRate = 0;
+    if (enableGst && rate > 0) {
+      if (inter) {
+        igst = totalTax;
+        igstRate = rate;
+      } else {
+        cgst = +(totalTax / 2).toFixed(2);
+        sgst = +(totalTax - cgst).toFixed(2);
+        cgstRate = rate / 2;
+        sgstRate = rate / 2;
+      }
+    }
+
+    return {
+      ...l,
+      gross,
+      discount,
+      other,
+      lineTotal,
+      taxableAmount,
+      cgst,
+      sgst,
+      igst,
+      cgstRate,
+      sgstRate,
+      igstRate,
+    };
+  });
+
+  const totals = lines.reduce(
+    (acc, l) => {
+      acc.qty += l.qty;
+      acc.gross += l.gross;
+      acc.discount += l.discount;
+      acc.other += l.other;
+      acc.taxableAmount += l.taxableAmount;
+      acc.cgst += l.cgst;
+      acc.sgst += l.sgst;
+      acc.igst += l.igst;
+      acc.lineTotal += l.lineTotal;
+      return acc;
+    },
+    { qty: 0, gross: 0, discount: 0, other: 0, taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, lineTotal: 0 },
+  );
+
+  const shipping = +Math.max(0, Number(invoice.shipping || 0)).toFixed(2);
+  const grandTotal = +(totals.lineTotal + shipping).toFixed(2);
+
+  return { lines, totals, shipping, grandTotal, inter, enableGst };
+}
+
+function escHtml(s: string | undefined): string {
+  if (!s) return "";
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+}
+
+function partyBlock(label: string, p: TaxInvoiceParty): string {
+  return `
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.6px;color:#666;text-transform:uppercase;margin-bottom:4px;">${label}</div>
+    <div style="font-size:13px;color:#111;font-weight:700;">${escHtml(p.name)}</div>
+    <div style="font-size:12px;color:#444;line-height:1.55;margin-top:2px;white-space:pre-wrap;">${escHtml(p.address)}</div>
+    ${p.state ? `<div style="font-size:12px;color:#444;margin-top:2px;">State: <strong>${escHtml(p.state)}</strong>${p.stateCode ? ` &nbsp;·&nbsp; Code: <strong>${escHtml(p.stateCode)}</strong>` : ""}</div>` : ""}
+    ${p.gstin ? `<div style="font-size:12px;color:#444;margin-top:2px;">GSTIN: <strong>${escHtml(p.gstin)}</strong></div>` : ""}
+    ${p.phone ? `<div style="font-size:12px;color:#444;margin-top:2px;">Phone: ${escHtml(p.phone)}</div>` : ""}
+    ${p.email ? `<div style="font-size:12px;color:#444;margin-top:2px;">Email: ${escHtml(p.email)}</div>` : ""}
+    ${p.customerType ? `<div style="font-size:11px;color:#888;margin-top:4px;">Customer Type: ${escHtml(p.customerType)}</div>` : ""}
+  `;
+}
+
+export function renderTaxInvoiceHtml(invoice: TaxInvoiceData, business: BusinessSettings): string {
+  const computed = computeInvoice(invoice, business);
+  const brandName = business.brandName || "JB Jewellery Collection";
+  const legalName = business.legalName || brandName;
+  const logoUrl = business.logoUrl || "";
+
+  const invoiceDate = new Date(invoice.invoiceDate || Date.now());
+  const orderDate = invoice.orderDate ? new Date(invoice.orderDate) : null;
+
+  const formatDate = (d: Date) =>
+    d.toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true });
+
+  const transactionType = computed.inter ? "Inter-State" : "Intra-State";
+  const placeOfSupply =
+    invoice.placeOfSupply ||
+    (invoice.billTo.state ? `${invoice.billTo.state}${invoice.billTo.stateCode ? " (" + invoice.billTo.stateCode + ")" : ""}` : "");
+  const natureOfSupply = invoice.natureOfSupply || "Goods";
+
+  const showCgstSgst = !computed.inter && computed.enableGst;
+  const showIgst = computed.inter && computed.enableGst;
+
+  const itemRows = computed.lines
+    .map((l, i) => {
+      const taxBits: string[] = [];
+      if (l.cgstRate) taxBits.push(`CGST ${l.cgstRate}%`);
+      if (l.sgstRate) taxBits.push(`SGST ${l.sgstRate}%`);
+      if (l.igstRate) taxBits.push(`IGST ${l.igstRate}%`);
+      return `
+      <tr>
+        <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;vertical-align:top;">${i + 1}</td>
+        <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;vertical-align:top;">
+          <div style="font-weight:700;">${escHtml(l.description)}</div>
+          ${l.hsn ? `<div style="color:#666;margin-top:2px;">HSN: ${escHtml(l.hsn)}</div>` : ""}
+          ${taxBits.length ? `<div style="color:#666;margin-top:2px;">${taxBits.join(" · ")}</div>` : ""}
+        </td>
+        <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;text-align:center;vertical-align:top;">${l.qty}</td>
+        <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;text-align:right;vertical-align:top;">${inrFmt(l.gross)}</td>
+        <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;text-align:right;vertical-align:top;">${l.discount ? "−" + inrFmt(l.discount) : inrFmt(0)}</td>
+        <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;text-align:right;vertical-align:top;">${inrFmt(l.other)}</td>
+        <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;text-align:right;vertical-align:top;">${inrFmt(l.taxableAmount)}</td>
+        ${showCgstSgst ? `<td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;text-align:right;vertical-align:top;">${inrFmt(l.cgst)}</td>` : ""}
+        ${showCgstSgst ? `<td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;text-align:right;vertical-align:top;">${inrFmt(l.sgst)}</td>` : ""}
+        ${showIgst ? `<td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#333;text-align:right;vertical-align:top;">${inrFmt(l.igst)}</td>` : ""}
+        <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;text-align:right;font-weight:700;vertical-align:top;">${inrFmt(l.lineTotal)}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const colCount = 7 + (showCgstSgst ? 2 : 0) + (showIgst ? 1 : 0) + 1;
+
+  const totalsRow = `
+    <tr style="background:#FAFAFA;">
+      <td colspan="2" style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:right;">TOTAL</td>
+      <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:center;">${computed.totals.qty}</td>
+      <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:right;">${inrFmt(computed.totals.gross)}</td>
+      <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:right;">${computed.totals.discount ? "−" + inrFmt(computed.totals.discount) : inrFmt(0)}</td>
+      <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:right;">${inrFmt(computed.totals.other)}</td>
+      <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:right;">${inrFmt(computed.totals.taxableAmount)}</td>
+      ${showCgstSgst ? `<td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:right;">${inrFmt(computed.totals.cgst)}</td>` : ""}
+      ${showCgstSgst ? `<td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:right;">${inrFmt(computed.totals.sgst)}</td>` : ""}
+      ${showIgst ? `<td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:700;text-align:right;">${inrFmt(computed.totals.igst)}</td>` : ""}
+      <td style="padding:10px 8px;border:1px solid #DDD;font-size:11px;color:#111;font-weight:800;text-align:right;">${inrFmt(computed.totals.lineTotal)}</td>
+    </tr>
+  `;
+
+  const headerCells = `
+    <th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;">#</th>
+    <th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:left;">Description</th>
+    <th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;">Qty</th>
+    <th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:right;">Gross&nbsp;Amount</th>
+    <th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:right;">Discount</th>
+    <th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:right;">Other&nbsp;Charges</th>
+    <th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:right;">Taxable&nbsp;Amount</th>
+    ${showCgstSgst ? `<th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:right;">CGST</th>` : ""}
+    ${showCgstSgst ? `<th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:right;">SGST</th>` : ""}
+    ${showIgst ? `<th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:right;">IGST</th>` : ""}
+    <th style="padding:10px 8px;border:1px solid #BBB;font-size:10px;color:#111;letter-spacing:0.4px;text-transform:uppercase;text-align:right;">Total&nbsp;Amount</th>
+  `;
+
+  const grandTotalLabel = computed.shipping > 0 ? "Grand Total (incl. shipping)" : "Grand Total";
+
+  const logoBlock = logoUrl
+    ? `<img src="${escHtml(logoUrl)}" alt="${escHtml(brandName)}" style="max-height:54px;max-width:180px;display:block;" />`
+    : `<div style="display:inline-block;background:#FFD700;border-radius:50%;width:54px;height:54px;line-height:54px;text-align:center;font-size:22px;font-weight:900;color:#111;">${escHtml(brandName.slice(0, 2).toUpperCase() || "JB")}</div>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tax Invoice — ${escHtml(invoice.invoiceNumber)}</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px 12px;background:#EEEEE8;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#111;}
+  .sheet{max-width:920px;margin:0 auto;background:#fff;border:1px solid #CCC;}
+  .toolbar{max-width:920px;margin:0 auto 12px;display:flex;gap:10px;justify-content:flex-end;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;border:0;cursor:pointer;text-decoration:none;background:#111;color:#FFD700;}
+  .btn-light{background:#fff;color:#111;border:1px solid #ccc;}
+  table{width:100%;border-collapse:collapse;}
+  .meta-table td{padding:6px 10px;font-size:12px;color:#222;border:1px solid #DDD;}
+  .meta-table .lbl{background:#F4F4F0;color:#555;font-weight:700;width:32%;}
+  @media print{body{background:#fff;padding:0}.toolbar{display:none}.sheet{border:0;max-width:100%}}
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button class="btn btn-light" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+  <div class="sheet">
+    <!-- Header -->
+    <div style="padding:18px 22px;border-bottom:1px solid #DDD;">
+      <table>
+        <tr>
+          <td style="vertical-align:middle;">${logoBlock}</td>
+          <td style="vertical-align:middle;text-align:center;">
+            <div style="font-size:22px;font-weight:900;color:#111;letter-spacing:0.5px;">Tax Invoice</div>
+            <div style="font-size:11px;color:#666;margin-top:4px;">Original for Recipient</div>
+          </td>
+          <td style="vertical-align:middle;text-align:right;">
+            <div style="font-size:14px;font-weight:800;color:#111;">${escHtml(brandName)}</div>
+            ${business.gstin ? `<div style="font-size:11px;color:#555;margin-top:2px;">GSTIN: ${escHtml(business.gstin)}</div>` : ""}
+            ${business.pan ? `<div style="font-size:11px;color:#555;">PAN: ${escHtml(business.pan)}</div>` : ""}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Invoice metadata -->
+    <div style="padding:14px 22px;">
+      <table class="meta-table">
+        <tr>
+          <td class="lbl">Invoice Number</td>
+          <td><strong>${escHtml(invoice.invoiceNumber)}</strong></td>
+          <td class="lbl">Invoice Date</td>
+          <td>${formatDate(invoiceDate)}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Order Number</td>
+          <td>${escHtml(invoice.orderNumber || "—")}</td>
+          <td class="lbl">Order Date</td>
+          <td>${orderDate ? formatDate(orderDate) : "—"}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Nature of Transaction</td>
+          <td>${transactionType}</td>
+          <td class="lbl">Place of Supply</td>
+          <td>${escHtml(placeOfSupply)}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Nature of Supply</td>
+          <td>${escHtml(natureOfSupply)}</td>
+          <td class="lbl">Payment Method</td>
+          <td>${escHtml(invoice.paymentMethod || "—")}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Bill To / Ship To -->
+    <div style="padding:0 22px 14px;">
+      <table>
+        <tr>
+          <td style="vertical-align:top;width:50%;padding:14px;border:1px solid #DDD;background:#FAFAFA;">
+            ${partyBlock("Bill To", invoice.billTo)}
+          </td>
+          <td style="vertical-align:top;width:50%;padding:14px;border:1px solid #DDD;border-left:0;background:#FAFAFA;">
+            ${partyBlock("Ship To", invoice.shipTo)}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Bill From / Ship From -->
+    <div style="padding:0 22px 14px;">
+      <table>
+        <tr>
+          <td style="vertical-align:top;width:50%;padding:14px;border:1px solid #DDD;">
+            ${partyBlock("Bill From", {
+              name: legalName,
+              address: business.billFromAddress || "",
+              state: business.billFromState,
+              stateCode: business.billFromStateCode,
+              gstin: business.gstin,
+            })}
+          </td>
+          <td style="vertical-align:top;width:50%;padding:14px;border:1px solid #DDD;border-left:0;">
+            ${partyBlock("Ship From", {
+              name: legalName,
+              address: business.shipFromAddress || business.billFromAddress || "",
+              state: business.billFromState,
+              stateCode: business.billFromStateCode,
+              gstin: business.gstin,
+            })}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Items table -->
+    <div style="padding:0 22px 14px;overflow-x:auto;">
+      <table style="background:#FFF;">
+        <thead>
+          <tr style="background:#F1F1EA;">
+            ${headerCells}
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+        <tfoot>${totalsRow}</tfoot>
+      </table>
+    </div>
+
+    <!-- Shipping + grand total -->
+    <div style="padding:0 22px 14px;">
+      <table>
+        <tr>
+          <td style="width:60%;vertical-align:top;padding-right:16px;">
+            ${invoice.notes ? `<div style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Notes</div><div style="font-size:12px;color:#444;line-height:1.5;white-space:pre-wrap;">${escHtml(invoice.notes)}</div>` : ""}
+          </td>
+          <td style="width:40%;vertical-align:top;">
+            <table>
+              <tr><td style="padding:6px 10px;font-size:12px;color:#444;border:1px solid #DDD;">Sub-total (taxable)</td><td style="padding:6px 10px;font-size:12px;color:#222;text-align:right;border:1px solid #DDD;border-left:0;">${inrFmt(computed.totals.taxableAmount)}</td></tr>
+              ${computed.totals.discount > 0 ? `<tr><td style="padding:6px 10px;font-size:12px;color:#16a34a;border:1px solid #DDD;border-top:0;">Discount</td><td style="padding:6px 10px;font-size:12px;color:#16a34a;text-align:right;border:1px solid #DDD;border-top:0;border-left:0;">−${inrFmt(computed.totals.discount)}</td></tr>` : ""}
+              ${showCgstSgst ? `<tr><td style="padding:6px 10px;font-size:12px;color:#444;border:1px solid #DDD;border-top:0;">CGST</td><td style="padding:6px 10px;font-size:12px;color:#222;text-align:right;border:1px solid #DDD;border-top:0;border-left:0;">${inrFmt(computed.totals.cgst)}</td></tr>` : ""}
+              ${showCgstSgst ? `<tr><td style="padding:6px 10px;font-size:12px;color:#444;border:1px solid #DDD;border-top:0;">SGST</td><td style="padding:6px 10px;font-size:12px;color:#222;text-align:right;border:1px solid #DDD;border-top:0;border-left:0;">${inrFmt(computed.totals.sgst)}</td></tr>` : ""}
+              ${showIgst ? `<tr><td style="padding:6px 10px;font-size:12px;color:#444;border:1px solid #DDD;border-top:0;">IGST</td><td style="padding:6px 10px;font-size:12px;color:#222;text-align:right;border:1px solid #DDD;border-top:0;border-left:0;">${inrFmt(computed.totals.igst)}</td></tr>` : ""}
+              ${computed.shipping > 0 ? `<tr><td style="padding:6px 10px;font-size:12px;color:#444;border:1px solid #DDD;border-top:0;">Shipping</td><td style="padding:6px 10px;font-size:12px;color:#222;text-align:right;border:1px solid #DDD;border-top:0;border-left:0;">${inrFmt(computed.shipping)}</td></tr>` : ""}
+              <tr><td style="padding:10px;font-size:13px;color:#111;font-weight:900;border:1px solid #111;background:#FFF8D6;">${grandTotalLabel}</td><td style="padding:10px;font-size:14px;color:#111;font-weight:900;text-align:right;border:1px solid #111;border-left:0;background:#FFF8D6;">${inrFmt(computed.grandTotal)}</td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Authorized signatory -->
+    <div style="padding:18px 22px;border-top:1px solid #DDD;">
+      <table>
+        <tr>
+          <td style="width:60%;vertical-align:top;font-size:11px;color:#444;line-height:1.6;">
+            <strong style="color:#111;">Declaration:</strong><br>
+            ${escHtml(business.declaration || "The goods sold are intended for end user consumption and not for resale. Whether the tax is payable on reverse charge basis: No.")}
+          </td>
+          <td style="width:40%;vertical-align:top;text-align:right;">
+            <div style="font-size:12px;color:#111;font-weight:700;">For ${escHtml(legalName)}</div>
+            <div style="height:48px;"></div>
+            <div style="border-top:1px solid #888;display:inline-block;padding-top:4px;font-size:11px;color:#444;min-width:180px;">${escHtml(business.signatoryName || "Authorized Signatory")}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Reg address footer -->
+    <div style="padding:14px 22px;border-top:1px solid #DDD;background:#FAFAFA;font-size:10px;color:#666;line-height:1.6;">
+      <strong style="color:#111;">Registered Address:</strong> ${escHtml(business.billFromAddress || "—")}
+      ${business.cin ? ` &nbsp;·&nbsp; <strong>CIN:</strong> ${escHtml(business.cin)}` : ""}
+      ${business.gstin ? ` &nbsp;·&nbsp; <strong>GSTIN:</strong> ${escHtml(business.gstin)}` : ""}
+      <br>
+      ${business.supportPhone ? `Customer Care: ${escHtml(business.supportPhone)} &nbsp;·&nbsp; ` : ""}
+      ${business.supportEmail ? `Email: ${escHtml(business.supportEmail)} &nbsp;·&nbsp; ` : ""}
+      ${business.contactUsUrl ? `<a href="${escHtml(business.contactUsUrl)}" style="color:#666;">Contact Us</a>` : ""}
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/** Convenience wrapper: render a tax invoice from an order + business settings. */
+export function renderOrderTaxInvoice(
+  order: OrderEmailData & { status?: string; tax?: number; invoice_number?: string },
+  business: BusinessSettings,
+): string {
+  const addr = order.address || {};
+  const customerParty: TaxInvoiceParty = {
+    name: order.customer_name,
+    address: [addr.line1, addr.line2, addr.city, addr.pincode].filter(Boolean).join(", "),
+    state: addr.state,
+    stateCode: addr.stateCode,
+    phone: order.phone,
+    email: order.email,
+    customerType: "Unregistered",
+  };
+
+  const taxInclusive = business.taxInclusive !== false;
+  const totalDiscount = Math.max(0, Number(order.discount) || 0);
+  const grossSubtotal = order.items.reduce((s, it) => s + Number(it.price) * Number(it.quantity), 0) || 1;
+  const lines: TaxInvoiceLine[] = order.items.map((it) => {
+    const lineGross = Number(it.price) * Number(it.quantity);
+    const lineDiscount = +((totalDiscount * lineGross) / grossSubtotal).toFixed(2);
+    return {
+      description: it.name,
+      hsn: business.defaultHsn || "7117",
+      qty: Number(it.quantity),
+      unitPrice: Number(it.price),
+      discount: lineDiscount,
+      gstRate: business.defaultGstRate ?? 3,
+    };
+  });
+
+  const invoiceNumber =
+    order.invoice_number ||
+    `${business.invoicePrefix || "JB"}${new Date(order.created_at).toISOString().slice(2, 7).replace("-", "")}${shortOrderId(order.id)}`;
+
+  return renderTaxInvoiceHtml(
+    {
+      invoiceNumber,
+      invoiceDate: order.created_at,
+      orderNumber: shortOrderId(order.id),
+      orderDate: order.created_at,
+      natureOfSupply: "Goods",
+      placeOfSupply: addr.state ? `${addr.state}${addr.stateCode ? " (" + addr.stateCode + ")" : ""}` : "",
+      paymentMethod: order.coupon_code ? `Online (Coupon: ${order.coupon_code})` : "Online",
+      billTo: customerParty,
+      shipTo: customerParty,
+      lines,
+      shipping: Number(order.shipping) || 0,
+      status: order.status,
+      notes: taxInclusive ? "All prices are inclusive of GST." : "Prices are exclusive of GST. GST is charged additionally.",
+    },
+    business,
+  );
 }
 
 // ── Sample data for previews ─────────────────────────────────────────────────

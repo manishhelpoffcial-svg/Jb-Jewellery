@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { DEFAULT_SETTINGS, Review, SiteSettings } from '@/lib/siteSettings';
+import { uploadBrandAsset } from '@/lib/adminApi';
 import {
-  Search, Layout, Share2, Star as StarIcon, Save, RotateCcw, Plus, Trash2, CheckCircle, Instagram, Facebook, MessageCircle, Twitter, MapPin
+  Search, Layout, Share2, Star as StarIcon, Save, RotateCcw, Plus, Trash2, CheckCircle, Instagram, Facebook, MessageCircle, Twitter, MapPin, Receipt, Upload, X
 } from 'lucide-react';
 
-type TabKey = 'seo' | 'footer' | 'social' | 'reviews';
+type TabKey = 'seo' | 'footer' | 'social' | 'reviews' | 'invoice';
 
 const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: 'seo', label: 'SEO', icon: Search },
   { key: 'footer', label: 'Footer Info', icon: Layout },
   { key: 'social', label: 'Social Links', icon: Share2 },
   { key: 'reviews', label: 'Customer Reviews', icon: StarIcon },
+  { key: 'invoice', label: 'Invoice & GST', icon: Receipt },
 ];
 
 export default function AdminSettings() {
@@ -126,6 +128,9 @@ export default function AdminSettings() {
           )}
           {tab === 'reviews' && (
             <ReviewsTab reviews={draft.reviews} onChange={v => update('reviews', v)} />
+          )}
+          {tab === 'invoice' && (
+            <InvoiceTab business={draft.business} onChange={v => update('business', v)} />
           )}
         </div>
       </div>
@@ -399,6 +404,154 @@ function ReviewsTab({ reviews, onChange }: { reviews: SiteSettings['reviews']; o
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── INVOICE & GST TAB ───────────────────────────────────────────────────
+function InvoiceTab({ business, onChange }: { business: SiteSettings['business']; onChange: (v: SiteSettings['business']) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const set = <K extends keyof SiteSettings['business']>(key: K, value: SiteSettings['business'][K]) =>
+    onChange({ ...business, [key]: value });
+
+  const onPickLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const url = await uploadBrandAsset(file, 'logo');
+      set('logoUrl', url);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader icon={Receipt} title="Brand & Tax Invoice" subtitle="Used on the customer-facing tax invoice (orders + custom invoices)." />
+
+      {/* Brand logo */}
+      <Field label="Brand Logo" hint="Replaces the default 'JB' badge on tax invoices and customer emails. PNG with transparent background works best.">
+        <div className="flex items-center gap-4">
+          <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 overflow-hidden shrink-0">
+            {business.logoUrl ? (
+              <img src={business.logoUrl} alt="Brand logo" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <span className="text-xs text-gray-400">No logo</span>
+            )}
+          </div>
+          <div className="flex-1">
+            <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800 cursor-pointer">
+              <Upload className="w-4 h-4" /> {uploading ? 'Uploading…' : 'Upload Logo'}
+              <input type="file" accept="image/*" className="hidden" onChange={onPickLogo} disabled={uploading} />
+            </label>
+            {business.logoUrl && (
+              <button
+                onClick={() => set('logoUrl', '')}
+                className="ml-3 inline-flex items-center gap-1 px-3 py-2.5 rounded-xl bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-100"
+              >
+                <X className="w-4 h-4" /> Remove
+              </button>
+            )}
+            {uploadError && <p className="text-xs text-red-600 mt-2">{uploadError}</p>}
+          </div>
+        </div>
+      </Field>
+
+      <div className="grid sm:grid-cols-2 gap-5">
+        <Field label="Brand Name (display)">
+          <input className="input" value={business.brandName} onChange={e => set('brandName', e.target.value)} placeholder="JB Jewellery Collection" />
+        </Field>
+        <Field label="Legal Entity Name" hint="Shown as 'For [Legal Name]' near signatory.">
+          <input className="input" value={business.legalName} onChange={e => set('legalName', e.target.value)} />
+        </Field>
+      </div>
+
+      <SectionHeader icon={Receipt} title="GST & Tax Details" subtitle="Configure GSTIN, default tax rate, HSN code and rounding behaviour." />
+
+      <div className="grid sm:grid-cols-2 gap-5">
+        <Field label="GSTIN" hint="15-character GSTIN. Leave blank to hide GST sections.">
+          <input className="input" value={business.gstin} onChange={e => set('gstin', e.target.value.toUpperCase())} placeholder="22AAAAA0000A1Z5" maxLength={15} />
+        </Field>
+        <Field label="PAN">
+          <input className="input" value={business.pan} onChange={e => set('pan', e.target.value.toUpperCase())} placeholder="AAAAA0000A" maxLength={10} />
+        </Field>
+        <Field label="CIN (optional)">
+          <input className="input" value={business.cin} onChange={e => set('cin', e.target.value)} placeholder="U12345AB2024PTC123456" />
+        </Field>
+        <Field label="Invoice Number Prefix">
+          <input className="input" value={business.invoicePrefix} onChange={e => set('invoicePrefix', e.target.value.replace(/\s+/g, '').toUpperCase().slice(0, 6))} placeholder="JB" />
+        </Field>
+        <Field label="Default GST Rate (%)" hint="e.g. 3 for jewellery, 5 / 12 / 18 / 28 for other categories.">
+          <input type="number" min={0} max={28} step="0.01" className="input" value={business.defaultGstRate} onChange={e => set('defaultGstRate', Number(e.target.value) || 0)} />
+        </Field>
+        <Field label="Default HSN Code" hint='Common: "7117" (imitation jewellery), "7113" (gold/silver jewellery).'>
+          <input className="input" value={business.defaultHsn} onChange={e => set('defaultHsn', e.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="7117" />
+        </Field>
+      </div>
+
+      <Field label="Tax Treatment">
+        <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+          <input type="checkbox" className="w-4 h-4" checked={business.taxInclusive} onChange={e => set('taxInclusive', e.target.checked)} />
+          <div>
+            <div className="text-sm font-semibold text-gray-900">Prices are inclusive of GST</div>
+            <div className="text-xs text-gray-500">When ON: the displayed price already includes GST and is split out on the invoice. When OFF: GST is added on top of the line total.</div>
+          </div>
+        </label>
+        <label className="flex items-center gap-3 p-3 mt-2 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+          <input type="checkbox" className="w-4 h-4" checked={business.enableGst} onChange={e => set('enableGst', e.target.checked)} />
+          <div>
+            <div className="text-sm font-semibold text-gray-900">Show GST columns on invoices</div>
+            <div className="text-xs text-gray-500">Disable to hide CGST/SGST/IGST columns (for businesses without GSTIN).</div>
+          </div>
+        </label>
+      </Field>
+
+      <SectionHeader icon={MapPin} title="Bill From / Ship From" subtitle="Used to compute Inter-State vs Intra-State (CGST+SGST vs IGST)." />
+
+      <Field label="Bill From Address">
+        <textarea rows={3} className="input resize-none" value={business.billFromAddress} onChange={e => set('billFromAddress', e.target.value)} placeholder="Building, street, city, pincode" />
+      </Field>
+
+      <Field label="Ship From Address" hint="Leave blank to use Bill From address.">
+        <textarea rows={3} className="input resize-none" value={business.shipFromAddress} onChange={e => set('shipFromAddress', e.target.value)} />
+      </Field>
+
+      <div className="grid sm:grid-cols-2 gap-5">
+        <Field label="State">
+          <input className="input" value={business.billFromState} onChange={e => set('billFromState', e.target.value)} placeholder="Maharashtra" />
+        </Field>
+        <Field label="State Code (2-digit)" hint="e.g. 27 = Maharashtra, 07 = Delhi, 09 = Uttar Pradesh.">
+          <input className="input" value={business.billFromStateCode} onChange={e => set('billFromStateCode', e.target.value.replace(/\D/g, '').slice(0, 2))} placeholder="27" maxLength={2} />
+        </Field>
+      </div>
+
+      <SectionHeader icon={Receipt} title="Signatory & Support" subtitle="Shown in the invoice signature block and footer." />
+
+      <div className="grid sm:grid-cols-2 gap-5">
+        <Field label="Authorized Signatory">
+          <input className="input" value={business.signatoryName} onChange={e => set('signatoryName', e.target.value)} placeholder="Authorized Signatory" />
+        </Field>
+        <Field label="Customer Care Phone">
+          <input className="input" value={business.supportPhone} onChange={e => set('supportPhone', e.target.value)} placeholder="+91 99999 99999" />
+        </Field>
+        <Field label="Customer Care Email">
+          <input className="input" value={business.supportEmail} onChange={e => set('supportEmail', e.target.value)} />
+        </Field>
+        <Field label="Contact Us URL">
+          <input className="input" value={business.contactUsUrl} onChange={e => set('contactUsUrl', e.target.value)} placeholder="https://yourshop.com/contact" />
+        </Field>
+      </div>
+
+      <Field label="Declaration / Footer Note">
+        <textarea rows={3} className="input resize-none" value={business.declaration} onChange={e => set('declaration', e.target.value)} />
+      </Field>
     </div>
   );
 }

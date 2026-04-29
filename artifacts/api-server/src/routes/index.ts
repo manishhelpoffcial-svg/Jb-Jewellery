@@ -13,6 +13,7 @@ import siteSettingsRouter from "./site-settings.js";
 import productReviewsRouter from "./product-reviews.js";
 import categoriesRouter from "./categories.js";
 import emailTemplatesRouter from "./email-templates.js";
+import invoicesRouter from "./invoices.js";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use("/site-settings", siteSettingsRouter);
 router.use("/product-reviews", productReviewsRouter);
 router.use("/categories", categoriesRouter);
 router.use("/admin/email-templates", emailTemplatesRouter);
+router.use("/admin/invoices", invoicesRouter);
 
 export default router;

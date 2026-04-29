@@ -456,3 +456,82 @@ export const emailTemplatesApi = {
       body: JSON.stringify(body),
     }),
 };
+
+// ── Brand asset upload (logo / signature) ───────────────────────────────────
+export async function uploadBrandAsset(file: File, kind: 'logo' | 'signature' = 'logo'): Promise<string> {
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ''));
+    r.onerror = () => reject(new Error('Could not read file'));
+    r.readAsDataURL(file);
+  });
+  const res = await fetch('/jb-api/uploads/brand-asset', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+    },
+    body: JSON.stringify({ base64, filename: file.name, mime: file.type, kind }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+  if (!res.ok || !data.url) throw new Error(data.error || 'Upload failed');
+  return data.url;
+}
+
+// ── Custom Invoices (admin) ─────────────────────────────────────────────────
+export type InvoicePartyInput = {
+  name: string;
+  address: string;
+  state?: string;
+  stateCode?: string;
+  gstin?: string;
+  phone?: string;
+  email?: string;
+  customerType?: string;
+};
+
+export type InvoiceLineInput = {
+  description: string;
+  hsn?: string;
+  qty: number;
+  unitPrice: number;
+  discount?: number;
+  otherCharges?: number;
+  gstRate?: number;
+};
+
+export type InvoiceInput = {
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  orderNumber?: string;
+  orderDate?: string;
+  natureOfSupply?: string;
+  placeOfSupply?: string;
+  paymentMethod?: string;
+  billTo: InvoicePartyInput;
+  shipTo?: InvoicePartyInput;
+  lines: InvoiceLineInput[];
+  shipping?: number;
+  notes?: string;
+};
+
+async function invoiceReq<T>(path: string, body: unknown): Promise<T> {
+  const r = await fetch(`/jb-api/admin/invoices${path}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+    },
+    body: JSON.stringify(body),
+  });
+  const data = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!r.ok) throw new Error((data.error as string) || 'Request failed');
+  return data as T;
+}
+
+export const invoicesApi = {
+  preview: (invoice: InvoiceInput) =>
+    invoiceReq<{ html: string; invoiceNumber: string }>('/preview', invoice),
+  send: (params: { to: string; subject?: string; invoice: InvoiceInput }) =>
+    invoiceReq<{ success: true; sentTo: string; invoiceNumber: string }>('/send', params),
+};

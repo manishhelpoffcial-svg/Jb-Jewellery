@@ -25,6 +25,24 @@ function extOf(name: string, mime?: string): string {
   return "jpg";
 }
 
+const ensuredBuckets = new Set<string>();
+async function ensureBucket(bucket: string) {
+  if (ensuredBuckets.has(bucket)) return;
+  try {
+    const { data } = await supabaseAdmin.storage.getBucket(bucket);
+    if (!data) {
+      await supabaseAdmin.storage.createBucket(bucket, { public: true });
+    }
+  } catch {
+    try {
+      await supabaseAdmin.storage.createBucket(bucket, { public: true });
+    } catch {
+      /* bucket may already exist — ignore */
+    }
+  }
+  ensuredBuckets.add(bucket);
+}
+
 async function uploadToBucket(
   bucket: string,
   prefix: string,
@@ -37,6 +55,7 @@ async function uploadToBucket(
   if (buffer.byteLength > MAX_BYTES) {
     throw new Error(`Image too large (max ${MAX_BYTES / 1024 / 1024} MB)`);
   }
+  await ensureBucket(bucket);
   const ext = extOf(filename, mime);
   const path = `${prefix}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const { error } = await supabaseAdmin.storage
@@ -103,6 +122,33 @@ router.post("/admin/review-image", simpleAdminMiddleware, async (req: Request, r
       filename || "image.jpg",
       base64,
       mime || "image/jpeg",
+    );
+    res.json({ url });
+  } catch (err: unknown) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "Upload failed" });
+  }
+});
+
+// Admin: upload brand logo / signature for invoices
+router.post("/brand-asset", simpleAdminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { base64, filename, mime, kind } = req.body as {
+      base64?: string;
+      filename?: string;
+      mime?: string;
+      kind?: string;
+    };
+    if (!base64) {
+      res.status(400).json({ error: "base64 is required" });
+      return;
+    }
+    const safeKind = (kind || "logo").replace(/[^a-z0-9_-]/gi, "").slice(0, 24) || "logo";
+    const url = await uploadToBucket(
+      "site-assets",
+      `branding/${safeKind}`,
+      filename || `${safeKind}.png`,
+      base64,
+      mime || "image/png",
     );
     res.json({ url });
   } catch (err: unknown) {

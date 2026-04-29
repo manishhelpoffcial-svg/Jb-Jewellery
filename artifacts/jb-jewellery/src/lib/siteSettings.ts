@@ -34,6 +34,28 @@ export type SiteSettings = {
     totalCustomers: string;
     items: Review[];
   };
+  business: {
+    brandName: string;
+    legalName: string;
+    logoUrl: string;
+    gstin: string;
+    pan: string;
+    cin: string;
+    enableGst: boolean;
+    defaultGstRate: number;
+    defaultHsn: string;
+    taxInclusive: boolean;
+    billFromAddress: string;
+    billFromState: string;
+    billFromStateCode: string;
+    shipFromAddress: string;
+    signatoryName: string;
+    supportPhone: string;
+    supportEmail: string;
+    contactUsUrl: string;
+    invoicePrefix: string;
+    declaration: string;
+  };
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -69,6 +91,29 @@ export const DEFAULT_SETTINGS: SiteSettings = {
       { id: '3', name: 'Sneha K.', initial: 'S', rating: 5, text: 'The chokers are so beautiful and lightweight. Wearing them daily to office.' },
       { id: '4', name: 'Ananya R.', initial: 'A', rating: 5, text: 'Great customer service and the packaging was so cute. Highly recommended!' },
     ],
+  },
+  business: {
+    brandName: 'JB Jewellery Collection',
+    legalName: 'JB Jewellery Collection',
+    logoUrl: '',
+    gstin: '',
+    pan: '',
+    cin: '',
+    enableGst: true,
+    defaultGstRate: 3,
+    defaultHsn: '7117',
+    taxInclusive: true,
+    billFromAddress: '',
+    billFromState: 'Maharashtra',
+    billFromStateCode: '27',
+    shipFromAddress: '',
+    signatoryName: 'Authorized Signatory',
+    supportPhone: '',
+    supportEmail: '',
+    contactUsUrl: '',
+    invoicePrefix: 'JB',
+    declaration:
+      'The goods sold are intended for end user consumption and not for resale. Whether the tax is payable on reverse charge basis: No.',
   },
 };
 

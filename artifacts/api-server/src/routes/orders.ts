@@ -9,7 +9,8 @@ import {
   sendOrderConfirmedEmail,
   sendOrderShippedEmail,
   sendOrderDeliveredEmail,
-  renderInvoiceStandaloneHtml,
+  renderOrderTaxInvoice,
+  getBusinessSettings,
   shortOrderId,
   ADMIN_EMAIL,
 } from "../lib/mailer.js";
@@ -45,21 +46,27 @@ router.get("/:id/invoice", async (req: Request, res: Response) => {
       res.status(404).type("html").send("<h1>Invoice not found</h1>");
       return;
     }
-    const html = renderInvoiceStandaloneHtml({
-      id: String(o.id),
-      customer_name: String(o.customer_name || ""),
-      email: String(o.email || ""),
-      phone: String(o.phone || ""),
-      items: Array.isArray(o.items) ? (o.items as Array<{ name: string; quantity: number; price: number }>) : [],
-      address: (o.address && typeof o.address === "object" ? o.address : {}) as Record<string, string>,
-      subtotal: Number(o.subtotal),
-      shipping: Number(o.shipping),
-      discount: Number(o.discount),
-      grand_total: Number(o.grand_total),
-      coupon_code: typeof o.coupon_code === "string" ? o.coupon_code : undefined,
-      created_at: String(o.created_at),
-      status: typeof o.status === "string" ? o.status : undefined,
-    });
+    const business = await getBusinessSettings();
+    const html = renderOrderTaxInvoice(
+      {
+        id: String(o.id),
+        customer_name: String(o.customer_name || ""),
+        email: String(o.email || ""),
+        phone: String(o.phone || ""),
+        items: Array.isArray(o.items)
+          ? (o.items as Array<{ name: string; quantity: number; price: number }>)
+          : [],
+        address: (o.address && typeof o.address === "object" ? o.address : {}) as Record<string, string>,
+        subtotal: Number(o.subtotal),
+        shipping: Number(o.shipping),
+        discount: Number(o.discount),
+        grand_total: Number(o.grand_total),
+        coupon_code: typeof o.coupon_code === "string" ? o.coupon_code : undefined,
+        created_at: String(o.created_at),
+        status: typeof o.status === "string" ? o.status : undefined,
+      },
+      business,
+    );
     if (req.query.download) {
       res.setHeader("Content-Disposition", `attachment; filename="invoice-${shortOrderId(id)}.html"`);
     }
