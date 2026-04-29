@@ -7,14 +7,19 @@ export interface CartItem extends Product {
 
 interface CartContextType {
   items: CartItem[];
+  savedItems: CartItem[];
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  saveForLater: (productId: string) => void;
+  moveToCart: (productId: string) => void;
+  removeSaved: (productId: string) => void;
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
   cartCount: number;
   cartTotal: number;
+  savedCount: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -24,11 +29,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem('jb-cart');
     return saved ? JSON.parse(saved) : [];
   });
+  const [savedItems, setSavedItems] = useState<CartItem[]>(() => {
+    const saved = localStorage.getItem('jb-saved-for-later');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('jb-cart', JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    localStorage.setItem('jb-saved-for-later', JSON.stringify(savedItems));
+  }, [savedItems]);
 
   const addToCart = (product: Product) => {
     setItems(current => {
@@ -59,13 +72,46 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const saveForLater = (productId: string) => {
+    setItems(current => {
+      const item = current.find(i => i.id === productId);
+      if (!item) return current;
+      setSavedItems(saved => {
+        if (saved.some(s => s.id === productId)) return saved;
+        return [{ ...item, quantity: item.quantity }, ...saved];
+      });
+      return current.filter(i => i.id !== productId);
+    });
+  };
+
+  const moveToCart = (productId: string) => {
+    setSavedItems(saved => {
+      const item = saved.find(i => i.id === productId);
+      if (!item) return saved;
+      setItems(current => {
+        const exists = current.find(c => c.id === productId);
+        if (exists) {
+          return current.map(c => (c.id === productId ? { ...c, quantity: c.quantity + item.quantity } : c));
+        }
+        return [...current, item];
+      });
+      return saved.filter(i => i.id !== productId);
+    });
+  };
+
+  const removeSaved = (productId: string) => {
+    setSavedItems(saved => saved.filter(i => i.id !== productId));
+  };
+
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const savedCount = savedItems.length;
 
   return (
     <CartContext.Provider value={{
-      items, addToCart, removeFromCart, updateQuantity, clearCart,
-      isCartOpen, setIsCartOpen, cartCount, cartTotal
+      items, savedItems, addToCart, removeFromCart, updateQuantity, clearCart,
+      saveForLater, moveToCart, removeSaved,
+      isCartOpen, setIsCartOpen, cartCount, cartTotal, savedCount,
     }}>
       {children}
     </CartContext.Provider>

@@ -62,6 +62,8 @@ import ProfileRecently from "./pages/profile/ProfileRecently";
 import ProfileNotifications from "./pages/profile/ProfileNotifications";
 import ProfilePassword from "./pages/profile/ProfilePassword";
 import ProfileHelp from "./pages/profile/ProfileHelp";
+import ProfileReturns from "./pages/profile/ProfileReturns";
+import ProfilePayments from "./pages/profile/ProfilePayments";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +87,8 @@ function Router() {
       <Route path="/profile/coupons" component={ProfileCoupons} />
       <Route path="/profile/recently" component={ProfileRecently} />
       <Route path="/profile/notifications" component={ProfileNotifications} />
+      <Route path="/profile/returns" component={ProfileReturns} />
+      <Route path="/profile/payments" component={ProfilePayments} />
       <Route path="/profile/password" component={ProfilePassword} />
       <Route path="/profile/help" component={ProfileHelp} />
 

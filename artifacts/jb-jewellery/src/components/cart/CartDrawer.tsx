@@ -1,15 +1,26 @@
 import React from 'react';
-import { X, Minus, Plus, ShoppingBag, ChevronRight } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, ChevronRight, Heart, Bookmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { formatPrice } from '@/lib/utils';
 import { useLocation } from 'wouter';
 
 export function CartDrawer() {
-  const { items, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const {
+    items, savedItems, isCartOpen, setIsCartOpen,
+    removeFromCart, updateQuantity, cartTotal,
+    saveForLater, moveToCart, removeSaved,
+  } = useCart();
   const { user, openAuthModal } = useAuth();
+  const { toggleWishlist, wishlistIds } = useWishlist();
   const [, navigate] = useLocation();
+
+  const moveToWishlist = (productId: string) => {
+    if (!wishlistIds.includes(productId)) toggleWishlist(productId);
+    removeFromCart(productId);
+  };
 
   const handleCheckout = () => {
     setIsCartOpen(false);
@@ -110,9 +121,54 @@ export function CartDrawer() {
                           </button>
                         </div>
                       </div>
+
+                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-50">
+                        <button onClick={() => saveForLater(item.id)}
+                          className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 hover:text-black transition-colors">
+                          <Bookmark className="w-3 h-3" /> Save for later
+                        </button>
+                        <span className="text-gray-200">·</span>
+                        <button onClick={() => moveToWishlist(item.id)}
+                          className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 hover:text-pink-600 transition-colors">
+                          <Heart className="w-3 h-3" /> Move to wishlist
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
+              )}
+
+              {/* Save For Later */}
+              {savedItems.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-2">
+                    <Bookmark className="w-3.5 h-3.5" /> Saved for Later ({savedItems.length})
+                  </p>
+                  <div className="space-y-3">
+                    {savedItems.map(s => (
+                      <div key={s.id} className="flex gap-3 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                        <div className="w-14 h-14 bg-gradient-to-br from-[#FFFBE6] to-[#FFF0B3] rounded-lg flex items-center justify-center shrink-0 text-lg font-bold">
+                          {s.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-gray-800 line-clamp-2">{s.name}</p>
+                          <p className="text-xs font-bold mt-1">{formatPrice(s.price)}</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <button onClick={() => moveToCart(s.id)}
+                              className="text-[10px] font-bold text-yellow-700 hover:text-yellow-800">
+                              Move to Cart
+                            </button>
+                            <span className="text-gray-200 text-[10px]">·</span>
+                            <button onClick={() => removeSaved(s.id)}
+                              className="text-[10px] font-bold text-gray-400 hover:text-red-500">
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 
