@@ -160,7 +160,7 @@ export default function ProfileAddresses() {
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
                   <label className="text-xs font-semibold text-gray-600 mb-1.5 block">{label}</label>
-                  <input value={(editing as Record<string, unknown>)[key] as string} onChange={e => setEditing(p => p ? { ...p, [key]: e.target.value } : p)}
+                  <input value={(editing as unknown as Record<string, unknown>)[key] as string} onChange={e => setEditing(p => p ? { ...p, [key]: e.target.value } : p)}
                     placeholder={placeholder}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary" />
                 </div>

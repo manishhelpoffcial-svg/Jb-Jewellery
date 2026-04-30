@@ -81,7 +81,7 @@ export default function ProfileRecently() {
                     <span className="text-sm font-black">{formatPrice(p.price)}</span>
                     <span className="text-xs text-gray-400 line-through">{formatPrice(p.originalPrice)}</span>
                   </div>
-                  <button onClick={() => addToCart({ id: p.id, name: p.name, price: p.price, originalPrice: p.originalPrice, quantity: 1, image: p.image })}
+                  <button onClick={() => addToCart(p)}
                     className="w-full flex items-center justify-center gap-1.5 py-2 bg-primary text-black font-bold rounded-xl text-xs hover:bg-yellow-400 transition-all">
                     <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
                   </button>
