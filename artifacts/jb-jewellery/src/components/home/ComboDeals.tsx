@@ -40,7 +40,10 @@ export function ComboDeals() {
                         el.style.display = 'none';
                         const parent = el.parentElement!;
                         parent.classList.add('bg-black', 'flex', 'items-center', 'p-8', 'min-h-[140px]');
-                        parent.innerHTML = `<h3 class="text-white text-2xl sm:text-4xl font-black tracking-wide w-2/3">${headline.toUpperCase()}</h3>`;
+                        const h3 = document.createElement('h3');
+                        h3.className = 'text-white text-2xl sm:text-4xl font-black tracking-wide w-2/3';
+                        h3.textContent = headline.toUpperCase();
+                        parent.appendChild(h3);
                       }}
                     />
                   ) : (
