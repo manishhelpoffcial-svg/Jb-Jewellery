@@ -87,22 +87,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let loadingCleared = false;
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      const jb = await loadProfile(session);
-      if (!mounted) return;
-      setUser(jb);
-      setLoading(false);
-    });
+    const clearLoading = () => {
+      if (mounted && !loadingCleared) {
+        loadingCleared = true;
+        setLoading(false);
+      }
+    };
+
+    // Safety net: never stay in loading state longer than 8 seconds
+    const safetyTimer = setTimeout(clearLoading, 8000);
+
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        if (!mounted) return;
+        const jb = await loadProfile(session);
+        if (!mounted) return;
+        setUser(jb);
+        clearLoading();
+      })
+      .catch(() => clearLoading());
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const jb = await loadProfile(session);
+      if (!mounted) return;
       setUser(jb);
+      clearLoading();
     });
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       sub.subscription.unsubscribe();
     };
   }, []);

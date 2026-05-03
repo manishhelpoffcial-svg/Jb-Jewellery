@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, EyeOff, Loader2, Sparkles, KeyRound, UserPlus } from 'lucide-react';
+import { X, Eye, EyeOff, Loader2, KeyRound, UserPlus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+
+function withTimeout<T>(promise: Promise<T>, ms: number, msg: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(msg)), ms)),
+  ]);
+}
 
 export function AuthModal() {
   const { isAuthModalOpen, authModalTab, closeAuthModal, login, signup, resetPassword } = useAuth();
@@ -27,7 +34,11 @@ export function AuthModal() {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      await login(loginForm.email, loginForm.password, loginRemember);
+      await withTimeout(
+        login(loginForm.email, loginForm.password, loginRemember),
+        15000,
+        'Login timed out. Please check your connection and try again.',
+      );
       closeAuthModal();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
@@ -49,13 +60,10 @@ export function AuthModal() {
               pincode: signupForm.pincode,
             }
           : undefined;
-      await signup(
-        signupForm.name,
-        signupForm.email,
-        signupForm.phone,
-        signupForm.password,
-        signupRemember,
-        address,
+      await withTimeout(
+        signup(signupForm.name, signupForm.email, signupForm.phone, signupForm.password, signupRemember, address),
+        20000,
+        'Signup timed out. Please check your connection and try again.',
       );
       setSignupForm({ name: '', email: '', phone: '', password: '', line1: '', line2: '', city: '', state: '', pincode: '' });
       closeAuthModal();
@@ -73,7 +81,11 @@ export function AuthModal() {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      await resetPassword(forgotEmail);
+      await withTimeout(
+        resetPassword(forgotEmail),
+        15000,
+        'Request timed out. Please check your connection and try again.',
+      );
       setSuccess('Reset link sent! Check your email inbox.');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to send reset email.');
