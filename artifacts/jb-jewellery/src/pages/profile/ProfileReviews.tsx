@@ -65,8 +65,10 @@ export default function ProfileReviews() {
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   const load = () => {
+    if (!user) { setLoading(false); return; }
     api.reviews.my()
       .then(({ reviews: r }) => setReviews(r))
+      .catch(() => setReviews([]))
       .finally(() => setLoading(false));
   };
 
@@ -74,11 +76,13 @@ export default function ProfileReviews() {
     load();
     setPhotos(readPhotos(user?.uid));
     if (user) {
-      getAllOrders().then(orders => {
-        const delivered = orders.filter(o => o.status === 'delivered');
-        const ids = new Set(delivered.flatMap(o => o.items.map(i => i.id)));
-        setDeliveredProductIds(ids);
-      });
+      getAllOrders()
+        .then(orders => {
+          const delivered = orders.filter(o => o.status === 'delivered');
+          const ids = new Set(delivered.flatMap(o => o.items.map(i => i.id)));
+          setDeliveredProductIds(ids);
+        })
+        .catch(() => {});
     }
   }, [user]);
 
