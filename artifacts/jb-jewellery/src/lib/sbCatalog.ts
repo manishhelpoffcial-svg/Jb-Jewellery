@@ -43,16 +43,32 @@ function mapRow(r: ProductRow): Product {
   };
 }
 
+// ── Products cache: 3-min TTL + in-flight deduplication ──────────────────────
+const PROD_CACHE_TTL = 180_000;
+let _prodCache: { data: Product[]; expires: number } | null = null;
+let _prodInflight: Promise<Product[]> | null = null;
+
+export function bustProductsCache() { _prodCache = null; _prodInflight = null; }
+
 export async function fetchProducts(): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from('products')
-    .select('id,name,category,price,original_price,discount,rating,reviews,image,is_new,is_bestseller')
-    .order('created_at', { ascending: false });
-  if (error || !data) {
-    console.warn('[sbCatalog] products fetch failed', error);
-    return [];
-  }
-  return (data as ProductRow[]).map(mapRow);
+  if (_prodCache && Date.now() < _prodCache.expires) return _prodCache.data;
+  if (_prodInflight) return _prodInflight;
+  _prodInflight = (async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id,name,category,price,original_price,discount,rating,reviews,image,is_new,is_bestseller')
+      .order('created_at', { ascending: false });
+    if (error || !data) {
+      console.warn('[sbCatalog] products fetch failed', error);
+      _prodInflight = null;
+      return [];
+    }
+    const result = (data as ProductRow[]).map(mapRow);
+    _prodCache = { data: result, expires: Date.now() + PROD_CACHE_TTL };
+    _prodInflight = null;
+    return result;
+  })();
+  return _prodInflight;
 }
 
 export async function fetchActiveCoupons(): Promise<SbCouponPublic[]> {

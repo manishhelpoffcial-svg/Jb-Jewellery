@@ -5,6 +5,21 @@ import { supabaseAdmin, isSupabaseAdminConfigured } from "../lib/supabaseAdmin.j
 
 const router = Router();
 
+// ─── Server-side memory cache (60 s TTL) ─────────────────────────────────────
+const CACHE_TTL_MS = 60_000;
+interface CacheEntry { data: unknown; expires: number }
+const _cache = new Map<string, CacheEntry>();
+
+function getCached(key: string): unknown | null {
+  const e = _cache.get(key);
+  if (!e || Date.now() > e.expires) { _cache.delete(key); return null; }
+  return e.data;
+}
+function setCached(key: string, data: unknown) {
+  _cache.set(key, { data, expires: Date.now() + CACHE_TTL_MS });
+}
+function bustCache() { _cache.clear(); }
+
 router.use((_req, res, next) => {
   if (!isSupabaseAdminConfigured) {
     res.status(500).json({ error: "Supabase not configured" });
@@ -86,10 +101,51 @@ async function fetchProductsForCategory(category: Record<string, unknown>) {
 
 // ─── PUBLIC ROUTES ──────────────────────────────────────────────────────────
 
+// All visible categories in ONE query, grouped by type — used by home page sections
+router.get("/all", async (_req: Request, res: Response) => {
+  try {
+    const cacheKey = "all-grouped";
+    const cached = getCached(cacheKey);
+    if (cached) {
+      res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+      res.json(cached);
+      return;
+    }
+    const { data, error } = await supabaseAdmin
+      .from("categories")
+      .select("*")
+      .eq("is_visible", true)
+      .order("sort_order", { ascending: true });
+    if (error) throw error;
+    const categories = data || [];
+    const result = {
+      categories,
+      byType: {
+        main:  categories.filter((c) => c["type"] === "main"),
+        vibe:  categories.filter((c) => c["type"] === "vibe"),
+        price: categories.filter((c) => c["type"] === "price"),
+        combo: categories.filter((c) => c["type"] === "combo"),
+      },
+    };
+    setCached(cacheKey, result);
+    res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+    res.json(result);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : "Failed to load" });
+  }
+});
+
 // List visible categories (optionally filtered by type)
 router.get("/", async (req: Request, res: Response) => {
   try {
     const type = req.query["type"] as string | undefined;
+    const cacheKey = `list:${type ?? "all"}`;
+    const cached = getCached(cacheKey);
+    if (cached) {
+      res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+      res.json(cached);
+      return;
+    }
     let q = supabaseAdmin
       .from("categories")
       .select("*")
@@ -98,7 +154,10 @@ router.get("/", async (req: Request, res: Response) => {
     if (type) q = q.eq("type", type);
     const { data, error } = await q;
     if (error) throw error;
-    res.json({ categories: data || [] });
+    const result = { categories: data || [] };
+    setCached(cacheKey, result);
+    res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+    res.json(result);
   } catch (err: unknown) {
     res.status(500).json({ error: err instanceof Error ? err.message : "Failed to load" });
   }
@@ -176,6 +235,7 @@ router.post("/admin", simpleAdminMiddleware, async (req: Request, res: Response)
       .select()
       .single();
     if (error) throw error;
+    bustCache();
     res.status(201).json({ category: data });
   } catch (err: unknown) {
     res.status(400).json({ error: err instanceof Error ? err.message : "Failed to create" });
@@ -193,6 +253,7 @@ router.patch("/admin/:id", simpleAdminMiddleware, async (req: Request, res: Resp
       .select()
       .single();
     if (error) throw error;
+    bustCache();
     res.json({ category: data });
   } catch (err: unknown) {
     res.status(400).json({ error: err instanceof Error ? err.message : "Failed to update" });
@@ -206,6 +267,7 @@ router.delete("/admin/:id", simpleAdminMiddleware, async (req: Request, res: Res
       .delete()
       .eq("id", req.params["id"]);
     if (error) throw error;
+    bustCache();
     res.json({ success: true });
   } catch (err: unknown) {
     res.status(400).json({ error: err instanceof Error ? err.message : "Failed to delete" });
@@ -234,6 +296,7 @@ router.put("/admin/:id/products", simpleAdminMiddleware, async (req: Request, re
         .insert(rows);
       if (insErr) throw insErr;
     }
+    bustCache();
     res.json({ success: true, count: productIds.length });
   } catch (err: unknown) {
     res.status(400).json({ error: err instanceof Error ? err.message : "Failed to assign products" });

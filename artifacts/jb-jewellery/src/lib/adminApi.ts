@@ -299,12 +299,33 @@ export interface SbCategory {
   product_ids?: string[];
 }
 
+// ── Client-side category cache: 2-min TTL + in-flight deduplication ──────────
+const CAT_CACHE_TTL = 120_000;
+type AllCatResult = { categories: SbCategory[]; byType: Record<string, SbCategory[]> };
+let _allCatCache: { data: AllCatResult; expires: number } | null = null;
+let _allCatInflight: Promise<AllCatResult> | null = null;
+
+function fetchAllCategoriesRaw(): Promise<AllCatResult> {
+  if (_allCatCache && Date.now() < _allCatCache.expires) return Promise.resolve(_allCatCache.data);
+  if (_allCatInflight) return _allCatInflight;
+  _allCatInflight = fetch('/jb-api/categories/all')
+    .then((r) => { if (!r.ok) throw new Error('Failed to load categories'); return r.json() as Promise<AllCatResult>; })
+    .then((data) => {
+      _allCatCache = { data, expires: Date.now() + CAT_CACHE_TTL };
+      _allCatInflight = null;
+      return data;
+    })
+    .catch((err) => { _allCatInflight = null; throw err; });
+  return _allCatInflight;
+}
+
 export const categoriesApi = {
-  // Public
+  // Single fetch for ALL types → components filter client-side (zero extra requests)
+  listAll: fetchAllCategoriesRaw,
   listPublic: async (type?: CategoryType): Promise<{ categories: SbCategory[] }> => {
-    const r = await fetch(`/jb-api/categories${type ? `?type=${type}` : ''}`);
-    if (!r.ok) throw new Error('Failed to load categories');
-    return r.json();
+    const all = await fetchAllCategoriesRaw();
+    if (!type) return { categories: all.categories };
+    return { categories: (all.byType[type] as SbCategory[]) || [] };
   },
   getBySlug: async (slug: string): Promise<{ category: SbCategory; products: SbProduct[] }> => {
     const r = await fetch(`/jb-api/categories/${encodeURIComponent(slug)}`);
@@ -312,6 +333,7 @@ export const categoriesApi = {
     if (!r.ok || !data.category) throw new Error(data.error || 'Failed to load category');
     return { category: data.category, products: data.products || [] };
   },
+  bustCache: () => { _allCatCache = null; _allCatInflight = null; },
 };
 
 // Use direct admin fetch for admin category endpoints (different prefix)
