@@ -1,8 +1,16 @@
 const _API_ROOT = (import.meta.env.VITE_API_URL as string) || '/jb-api';
 const BASE = `${_API_ROOT}/sb-admin`;
 
+const STORAGE_KEY = 'jb-admin-session';
 function adminToken(): string {
-  return (import.meta.env.VITE_ADMIN_PASSWORD as string) || '';
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return '';
+    const parsed = JSON.parse(raw) as { token?: string };
+    return parsed.token || '';
+  } catch {
+    return '';
+  }
 }
 
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -244,7 +252,7 @@ async function uploadImage(endpoint: string, file: File): Promise<string> {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      'x-admin-token': adminToken(),
     },
     body: JSON.stringify({ base64, filename: file.name, mime: file.type }),
   });
@@ -343,7 +351,7 @@ async function catAdminReq<T>(path: string, init: RequestInit = {}): Promise<T> 
     ...init,
     headers: {
       'content-type': 'application/json',
-      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      'x-admin-token': adminToken(),
       ...(init.headers || {}),
     },
   });
@@ -408,7 +416,7 @@ export const settingsApi = {
       method: 'PUT',
       headers: {
         'content-type': 'application/json',
-        'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+        'x-admin-token': adminToken(),
       },
       body: JSON.stringify({ settings }),
     });
@@ -424,7 +432,7 @@ async function adminReviewReq<T>(path: string, init: RequestInit = {}): Promise<
     ...init,
     headers: {
       'content-type': 'application/json',
-      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      'x-admin-token': adminToken(),
       ...(init.headers || {}),
     },
   });
@@ -451,7 +459,7 @@ async function emailReq<T>(path: string, init: RequestInit = {}): Promise<T> {
     ...init,
     headers: {
       'content-type': 'application/json',
-      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      'x-admin-token': adminToken(),
       ...(init.headers || {}),
     },
   });
@@ -492,7 +500,7 @@ export async function uploadBrandAsset(file: File, kind: 'logo' | 'signature' = 
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      'x-admin-token': adminToken(),
     },
     body: JSON.stringify({ base64, filename: file.name, mime: file.type, kind }),
   });
@@ -543,7 +551,7 @@ async function invoiceReq<T>(path: string, body: unknown): Promise<T> {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-admin-token': (import.meta.env.VITE_ADMIN_PASSWORD as string) || '',
+      'x-admin-token': adminToken(),
     },
     body: JSON.stringify(body),
   });

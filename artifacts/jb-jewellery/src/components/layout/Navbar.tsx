@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Heart, ShoppingCart, User, Menu, X, LogOut, Package, ShieldCheck, Home, Tag } from 'lucide-react';
+import { Search, Heart, ShoppingCart, User, Menu, X, LogOut, Package, ShieldCheck, Home, Tag, MapPin, RotateCcw, Star, CreditCard, Ticket, Clock, HelpCircle, Bell, Lock } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -257,11 +257,38 @@ export function Navbar() {
                   <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                     <User className="w-4 h-4 shrink-0" /> My Profile
                   </Link>
-                  <Link href="/my-orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Link href="/profile/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                     <Package className="w-4 h-4 shrink-0" /> My Orders
                   </Link>
                   <Link href="/profile/wishlist" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                     <Heart className="w-4 h-4 shrink-0" /> My Wishlist
+                  </Link>
+                  <Link href="/profile/addresses" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <MapPin className="w-4 h-4 shrink-0" /> My Addresses
+                  </Link>
+                  <Link href="/profile/returns" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <RotateCcw className="w-4 h-4 shrink-0" /> Returns &amp; Refunds
+                  </Link>
+                  <Link href="/profile/reviews" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <Star className="w-4 h-4 shrink-0" /> My Reviews
+                  </Link>
+                  <Link href="/profile/payments" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <CreditCard className="w-4 h-4 shrink-0" /> Payment / Wallet
+                  </Link>
+                  <Link href="/profile/coupons" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <Ticket className="w-4 h-4 shrink-0" /> My Coupons
+                  </Link>
+                  <Link href="/profile/recently" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <Clock className="w-4 h-4 shrink-0" /> Recently Viewed
+                  </Link>
+                  <Link href="/profile/notifications" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <Bell className="w-4 h-4 shrink-0" /> Notifications
+                  </Link>
+                  <Link href="/profile/help" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <HelpCircle className="w-4 h-4 shrink-0" /> Help &amp; Support
+                  </Link>
+                  <Link href="/profile/password" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <Lock className="w-4 h-4 shrink-0" /> Change Password
                   </Link>
                   {user.role === 'admin' && (
                     <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors">

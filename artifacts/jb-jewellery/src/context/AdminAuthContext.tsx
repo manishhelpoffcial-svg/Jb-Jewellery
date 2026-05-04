@@ -2,9 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 
 const STORAGE_KEY = 'jb-admin-session';
-const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || '';
-const ADMIN_NAME = import.meta.env.VITE_ADMIN_NAME || 'Admin';
+const _API_ROOT = (import.meta.env.VITE_API_URL as string) || '/jb-api';
+
+interface AdminSession {
+  name: string;
+  email: string;
+  token: string;
+}
 
 interface AdminUser {
   name: string;
@@ -20,15 +24,26 @@ interface AdminAuthContextType {
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
-function readSession(): AdminUser | null {
+function readSession(): AdminSession | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as AdminUser & { email: string };
-    if (!parsed.email || parsed.email.toLowerCase() !== ADMIN_EMAIL) return null;
-    return { name: parsed.name || ADMIN_NAME, email: parsed.email };
+    const parsed = JSON.parse(raw) as AdminSession;
+    if (!parsed.email || !parsed.token) return null;
+    return parsed;
   } catch {
     return null;
+  }
+}
+
+export function getAdminToken(): string {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return '';
+    const parsed = JSON.parse(raw) as AdminSession;
+    return parsed.token || '';
+  } catch {
+    return '';
   }
 }
 
@@ -37,18 +52,26 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setAdmin(readSession());
+    const s = readSession();
+    setAdmin(s ? { name: s.name, email: s.email } : null);
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string, remember: boolean) => {
-    if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-      throw new Error('Admin credentials are not configured.');
+    const res = await fetch(`${_API_ROOT}/sb-admin/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: email.trim(), password }),
+    });
+    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!res.ok) {
+      throw new Error((data.error as string) || 'Login failed.');
     }
-    if (email.trim().toLowerCase() !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      throw new Error('Invalid admin email or password.');
-    }
-    const session: AdminUser = { name: ADMIN_NAME, email: ADMIN_EMAIL };
+    const session: AdminSession = {
+      name: (data.name as string) || 'Admin',
+      email: (data.email as string) || email.trim().toLowerCase(),
+      token: data.token as string,
+    };
     const payload = JSON.stringify(session);
     localStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(STORAGE_KEY);
@@ -57,7 +80,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       sessionStorage.setItem(STORAGE_KEY, payload);
     }
-    setAdmin(session);
+    setAdmin({ name: session.name, email: session.email });
   };
 
   const logout = () => {

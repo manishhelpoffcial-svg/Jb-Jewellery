@@ -62,7 +62,7 @@ export default function AdminLogin() {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder={(import.meta.env.VITE_ADMIN_EMAIL as string) || 'admin@jbjewellery.com'}
+              placeholder="Enter admin email"
             />
           </div>
           <div>

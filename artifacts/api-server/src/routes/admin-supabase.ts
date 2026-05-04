@@ -10,6 +10,38 @@ import {
 
 const router = Router();
 
+// ── Login endpoint — NO auth middleware, validates credentials server-side ──
+router.post('/auth/login', (req: Request, res: Response) => {
+  const { email, password } = req.body as { email?: string; password?: string };
+  const ADMIN_EMAIL = (
+    process.env['ADMIN_EMAIL'] ||
+    process.env['VITE_ADMIN_EMAIL'] ||
+    ''
+  ).toLowerCase();
+  const ADMIN_PASSWORD =
+    process.env['ADMIN_PASSWORD'] || process.env['VITE_ADMIN_PASSWORD'] || '';
+  const ADMIN_NAME =
+    process.env['ADMIN_NAME'] || process.env['VITE_ADMIN_NAME'] || 'Admin';
+
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    res.status(500).json({
+      error:
+        'Admin credentials not configured on server. Set ADMIN_EMAIL and ADMIN_PASSWORD in your environment variables.',
+    });
+    return;
+  }
+  if (
+    !email ||
+    !password ||
+    email.trim().toLowerCase() !== ADMIN_EMAIL ||
+    password !== ADMIN_PASSWORD
+  ) {
+    res.status(401).json({ error: 'Invalid admin email or password.' });
+    return;
+  }
+  res.json({ token: ADMIN_PASSWORD, name: ADMIN_NAME, email: ADMIN_EMAIL });
+});
+
 router.use(simpleAdminMiddleware);
 
 router.use((_req, res, next) => {

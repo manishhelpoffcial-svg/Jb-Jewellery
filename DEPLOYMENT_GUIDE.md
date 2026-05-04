@@ -65,10 +65,11 @@ VITE_SUPABASE_ANON_KEY     = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdX
 # Replace [YOUR-DB-PASSWORD] with your Supabase database password
 DATABASE_URL               = postgresql://postgres:[YOUR-DB-PASSWORD]@db.glpsidmtigfepgowliia.supabase.co:5432/postgres
 
-# ── Admin Panel ─────────────────────────────────────────────────────────────
-VITE_ADMIN_EMAIL           = amritabiswas7432@gmail.com
-VITE_ADMIN_PASSWORD        = admin123
-VITE_ADMIN_NAME            = admin
+# ── Admin Panel (server-side only — NOT VITE_ prefixed) ──────────────────────
+# These are checked by the API server at login time. Never exposed in the browser bundle.
+ADMIN_EMAIL                = amritabiswas7432@gmail.com
+ADMIN_PASSWORD             = admin123
+ADMIN_NAME                 = admin
 
 # ── Email (Zoho) ─────────────────────────────────────────────────────────────
 ZOHO_EMAIL                 = manish@grafxcore.in
@@ -139,9 +140,9 @@ Vercel Dashboard → your project → **Settings → Domains** → Add your doma
 | `VITE_SUPABASE_URL` | Frontend build | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Frontend build | Supabase anon key |
 | `DATABASE_URL` | API (server-side) | Direct Postgres connection (Supabase URI) |
-| `VITE_ADMIN_EMAIL` | Frontend + API | Admin panel login email |
-| `VITE_ADMIN_PASSWORD` | Frontend + API | Admin panel login password |
-| `VITE_ADMIN_NAME` | Frontend | Display name in admin panel |
+| `ADMIN_EMAIL` | API (server-side) | Admin panel login email — checked at login time |
+| `ADMIN_PASSWORD` | API (server-side) | Admin panel login password — never sent to browser |
+| `ADMIN_NAME` | API (server-side) | Display name shown in admin panel |
 | `ZOHO_EMAIL` | API | Zoho Mail sender address |
 | `ZOHO_APP_PASSWORD` | API | Zoho Mail app password |
 | `VITE_FIREBASE_*` | Frontend | Firebase config (analytics, notifications) |
@@ -161,8 +162,12 @@ Vercel Dashboard → your project → **Settings → Domains** → Add your doma
 → Vercel Dashboard → your project → **Functions** tab → view function logs
 → Most common cause: missing `SUPABASE_SERVICE_ROLE_KEY` or wrong `DATABASE_URL`
 
+**"Admin credentials not configured on server" on admin login**
+→ Add `ADMIN_EMAIL` and `ADMIN_PASSWORD` to Vercel → Environment Variables, then redeploy
+→ These are server-side vars (no `VITE_` prefix). The API checks them at login time — they are never embedded in the browser bundle
+
 **"Invalid credentials" on admin login**
-→ `VITE_ADMIN_EMAIL` and `VITE_ADMIN_PASSWORD` in Vercel must match exactly what you type in the login form
+→ `ADMIN_EMAIL` and `ADMIN_PASSWORD` in Vercel must match exactly what you type in the login form
 
 **Emails not sending**
 → Check `ZOHO_EMAIL` and `ZOHO_APP_PASSWORD` are correct
