@@ -1,6 +1,6 @@
 # JB Jewellery Collection — Vercel Deployment Guide
 
-This guide deploys the **entire app — frontend and API — to Vercel only**. No Railway or separate backend host is needed.
+Deploy the **entire app — frontend + API — to a single Vercel project**. No separate backend host needed.
 
 ---
 
@@ -13,147 +13,167 @@ Browser
         └─▶ /*         →  Static React frontend
 ```
 
-Vercel hosts everything:
-- **Frontend** — React/Vite app built to static files
-- **API** — Express app bundled into a single Vercel serverless function
+- **Frontend** — React/Vite app (static files, fast CDN delivery)
+- **API** — Express app bundled into a single Vercel serverless function at `/api/*`
+- **Database** — Supabase (Postgres + Auth + Storage)
 
 ---
 
-## Step 1 — Set Up Supabase
+## Step 1 — Supabase Setup
 
 > Skip if you are keeping your existing Supabase project.
 
 1. Go to [supabase.com](https://supabase.com) → **New Project**
-2. Choose a name, region closest to your users, and a strong DB password
-3. Once created, go to **Settings → API** and copy:
-   - **Project URL** (e.g. `https://xxxxx.supabase.co`)
+2. Once created, go to **Settings → API** and copy:
+   - **Project URL**
    - **anon public** key
-   - **service_role** key _(keep secret — never put in frontend code)_
-4. **Settings → Authentication → Email** → turn off "Confirm email" (so users can log in without confirming)
-5. Open the **SQL Editor** and paste + run the entire contents of `DATABASE_MIGRATION.sql`
-6. Go to **Storage** → **New Bucket** → Name: `invoices`, set to **Public**. Then also create buckets named `products`, `categories`, `review-images`, `site-assets` (all Public)
+   - **service_role** key _(keep secret — never expose in frontend code)_
+3. **Settings → Database → Connection string → URI** — copy the Postgres URI (needed for `DATABASE_URL`)
+4. **Settings → Authentication → Email** → turn off "Confirm email"
+5. Open **SQL Editor** → paste and run the full contents of `DATABASE_MIGRATION.sql`
+6. Go to **Storage → New Bucket** → create these buckets (all set to **Public**):
+   - `invoices`, `products`, `categories`, `review-images`, `site-assets`
 
 ---
 
 ## Step 2 — Deploy to Vercel
 
-1. Push this repository to GitHub
+1. Push this repo to GitHub
 2. Go to [vercel.com](https://vercel.com) → **New Project** → Import from GitHub
 3. Select this repository
-4. Vercel reads `vercel.json` automatically. Leave all build settings as detected:
-   - **Framework**: Other (auto-detected from vercel.json)
-5. **Before clicking Deploy**, go to **Environment Variables** and add all of these:
+4. Settings to confirm:
+   - **Root Directory**: `/` (leave as repo root — do not set a subdirectory)
+   - **Framework Preset**: Other
+   - Vercel auto-reads `vercel.json` — do not change build settings
+5. Go to **Environment Variables** and add every variable from the table below
+6. Click **Deploy** → build takes ~2–3 minutes → site goes live
 
-```
-# Supabase
-VITE_SUPABASE_URL          = https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_ANON_KEY     = your-anon-public-key
-SUPABASE_URL               = https://YOUR_PROJECT.supabase.co
-SUPABASE_ANON_KEY          = your-anon-public-key
-SUPABASE_SERVICE_ROLE_KEY  = your-service-role-key
+---
 
-# Admin panel credentials (you choose these)
-VITE_ADMIN_EMAIL           = youremail@example.com
-VITE_ADMIN_PASSWORD        = choose-a-strong-password
-VITE_ADMIN_NAME            = Admin
+## Environment Variables (copy these into Vercel)
 
-# Email sending via Zoho
-ZOHO_EMAIL                 = your-zoho-email@yourdomain.com
-ZOHO_APP_PASSWORD          = your-zoho-app-password
+```env
+# ── Supabase ────────────────────────────────────────────────────────────────
+SUPABASE_URL               = https://glpsidmtigfepgowliia.supabase.co
+SUPABASE_ANON_KEY          = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscHNpZG10aWdmZXBnb3dsaWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.DSPbzbud6h5PxPc0KvrZeb_FbMg4r5gwzY9FhsXbNpE
+SUPABASE_SERVICE_ROLE_KEY  = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscHNpZG10aWdmZXBnb3dsaWlhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjkyNTIyMywiZXhwIjoyMDkyNTAxMjIzfQ.Xv899oADgZIt9lP9T6y4uC4IlM_khJYnTR27WOnxxO8
 
-# JWT secret for customer sessions (generate any random 64-char string)
-JWT_SECRET                 = random-64-character-string-here
+VITE_SUPABASE_URL          = https://glpsidmtigfepgowliia.supabase.co
+VITE_SUPABASE_ANON_KEY     = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscHNpZG10aWdmZXBnb3dsaWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.DSPbzbud6h5PxPc0KvrZeb_FbMg4r5gwzY9FhsXbNpE
 
-# Required for the Vite build
+# Supabase direct Postgres connection (Settings → Database → Connection string → URI)
+# Replace [YOUR-DB-PASSWORD] with your Supabase database password
+DATABASE_URL               = postgresql://postgres:[YOUR-DB-PASSWORD]@db.glpsidmtigfepgowliia.supabase.co:5432/postgres
+
+# ── Admin Panel ─────────────────────────────────────────────────────────────
+VITE_ADMIN_EMAIL           = amritabiswas7432@gmail.com
+VITE_ADMIN_PASSWORD        = admin123
+VITE_ADMIN_NAME            = admin
+
+# ── Email (Zoho) ─────────────────────────────────────────────────────────────
+ZOHO_EMAIL                 = manish@grafxcore.in
+ZOHO_APP_PASSWORD          = 2DccDD98mu1f
+
+# ── Firebase ─────────────────────────────────────────────────────────────────
+VITE_FIREBASE_API_KEY              = AIzaSyAQta3YKiao4_2JD5oLF4_IfL75h83scAY
+VITE_FIREBASE_AUTH_DOMAIN          = jb-jewellery.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID           = jb-jewellery
+VITE_FIREBASE_STORAGE_BUCKET       = jb-jewellery.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID  = 350196066764
+VITE_FIREBASE_APP_ID               = 1:350196066764:web:2599ec34c09a476ae51569
+VITE_FIREBASE_MEASUREMENT_ID       = G-CSE46DXRRG
+
+# ── Security ─────────────────────────────────────────────────────────────────
+JWT_SECRET                 = oww20rDQvHzVlC0ks+c0smzRDB2YIWEHUv5YPGHzIzT4tMJEgUV4272ezwUTSeUK6NUbsOtzuZd44zTY0oKFpw==
+SESSION_SECRET             = oww20rDQvHzVlC0ks+c0smzRDB2YIWEHUv5YPGHzIzT4tMJEgUV4272ezwUTSeUK6NUbsOtzuZd44zTY0oKFpw==
+
+# ── Build Config ─────────────────────────────────────────────────────────────
 BASE_PATH                  = /
 NODE_ENV                   = production
 ```
 
-6. Click **Deploy**
-7. Wait for build to finish (~2–3 minutes). Your site is live at `https://your-project.vercel.app`
+> **DATABASE_URL note**: Go to your Supabase project → **Settings → Database → Connection string → URI** and copy the full URI. It looks like `postgresql://postgres:[password]@db.glpsidmtigfepgowliia.supabase.co:5432/postgres`. Replace `[password]` with the database password you chose when creating the Supabase project.
 
 ---
 
-## Step 3 — Create the Admin Account in Supabase
+## Step 3 — Create the Admin Account
 
-After deployment:
+After your first deployment:
 
 1. Supabase Dashboard → **Authentication → Users → Add User**
-2. Enter your admin email and password, check **Auto Confirm User**
+2. Enter `amritabiswas7432@gmail.com` as the email, set a password, check **Auto Confirm User**
 3. Open **SQL Editor** and run:
    ```sql
    UPDATE public.profiles
    SET role = 'admin'
    WHERE id = (
-     SELECT id FROM auth.users WHERE email = 'youremail@example.com'
+     SELECT id FROM auth.users WHERE email = 'amritabiswas7432@gmail.com'
    );
    ```
-4. Log in to your live site at `/admin/login` using the `VITE_ADMIN_EMAIL` and `VITE_ADMIN_PASSWORD` you set
+4. Log in at `https://your-site.vercel.app/admin` using `VITE_ADMIN_EMAIL` and `VITE_ADMIN_PASSWORD`
 
 ---
 
-## Step 4 — Configure a Custom Domain (optional)
+## Step 4 — Run the Categories Migration
+
+If you want the dynamic home page sections (vibe tiles, price buckets, combo deals), run the second migration:
+
+1. Supabase SQL Editor → paste + run `supabase-migration-categories.sql`
+2. This seeds all default category tiles. Go to `/admin/categories` to manage them.
+
+---
+
+## Step 5 — Custom Domain (optional)
 
 Vercel Dashboard → your project → **Settings → Domains** → Add your domain → follow the DNS instructions
 
 ---
 
-## Switching to a New Supabase Project (Migrating Data)
-
-If you are moving from one Supabase project to another and want to keep existing data:
-
-1. Run `DATABASE_MIGRATION.sql` on the new project (creates schema + seeds products, categories, coupons)
-2. **Orders**: Supabase Dashboard → Table Editor → orders → Export CSV → import into new project
-3. **Product images**: If images are uploaded to Supabase Storage, download them and re-upload to new project's storage buckets. Images that are already public URLs (e.g. from another CDN) need no migration
-4. **Users/customers**: Supabase auth users cannot be migrated via SQL. Customers will need to re-register on the new project
-5. Update all Vercel environment variables to point to the new Supabase project URL and keys, then redeploy
-
----
-
 ## Environment Variables Reference
 
-| Variable | Where it's used | Description |
-|----------|----------------|-------------|
-| `VITE_SUPABASE_URL` | Frontend build + API | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Frontend build | Supabase public anon key |
-| `SUPABASE_URL` | API serverless function | Supabase project URL (server-side) |
-| `SUPABASE_ANON_KEY` | API serverless function | Supabase anon key (server-side) |
-| `SUPABASE_SERVICE_ROLE_KEY` | API serverless function | Secret admin key (never put in VITE_ vars) |
+| Variable | Used by | Description |
+|----------|---------|-------------|
+| `SUPABASE_URL` | API (server-side) | Supabase project URL |
+| `SUPABASE_ANON_KEY` | API (server-side) | Supabase public anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | API (server-side) | Secret admin key — never use in VITE_ vars |
+| `VITE_SUPABASE_URL` | Frontend build | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Frontend build | Supabase anon key |
+| `DATABASE_URL` | API (server-side) | Direct Postgres connection (Supabase URI) |
 | `VITE_ADMIN_EMAIL` | Frontend + API | Admin panel login email |
 | `VITE_ADMIN_PASSWORD` | Frontend + API | Admin panel login password |
-| `VITE_ADMIN_NAME` | Frontend | Display name shown in admin panel |
-| `ZOHO_EMAIL` | API serverless function | Zoho Mail sender address |
-| `ZOHO_APP_PASSWORD` | API serverless function | Zoho Mail app password |
-| `JWT_SECRET` | API serverless function | Secret for customer JWT tokens |
-| `BASE_PATH` | Frontend build only | Must be set to `/` |
+| `VITE_ADMIN_NAME` | Frontend | Display name in admin panel |
+| `ZOHO_EMAIL` | API | Zoho Mail sender address |
+| `ZOHO_APP_PASSWORD` | API | Zoho Mail app password |
+| `VITE_FIREBASE_*` | Frontend | Firebase config (analytics, notifications) |
+| `JWT_SECRET` | API | Signs customer session tokens |
+| `SESSION_SECRET` | API | Session cookie signing |
+| `BASE_PATH` | Frontend build | Must be `/` |
 | `NODE_ENV` | Both | Set to `production` |
 
 ---
 
 ## Troubleshooting
 
-**Build fails with "BASE_PATH not set"**
-→ Add `BASE_PATH=/` to Vercel environment variables
+**"No Output Directory named public"**
+→ You are deploying the wrong folder. Set Root Directory to `/` (the repo root), not `artifacts/jb-jewellery` or `artifacts/api-server`. The root `vercel.json` handles everything.
 
 **API returns 500 errors**
-→ Check Vercel → your project → **Functions** tab → look at function logs
-→ Most common cause: missing `SUPABASE_SERVICE_ROLE_KEY` or wrong Supabase URL
+→ Vercel Dashboard → your project → **Functions** tab → view function logs
+→ Most common cause: missing `SUPABASE_SERVICE_ROLE_KEY` or wrong `DATABASE_URL`
 
 **"Invalid credentials" on admin login**
-→ Your `VITE_ADMIN_EMAIL` and `VITE_ADMIN_PASSWORD` Vercel env vars must match exactly what you type in the login form
+→ `VITE_ADMIN_EMAIL` and `VITE_ADMIN_PASSWORD` in Vercel must match exactly what you type in the login form
 
 **Emails not sending**
 → Check `ZOHO_EMAIL` and `ZOHO_APP_PASSWORD` are correct
-→ Make sure your Zoho account allows SMTP access and the app password is generated from **Zoho Mail → Settings → Security → App Passwords**
-→ To use Gmail instead: edit `artifacts/api-server/src/lib/mailer.ts` and change the SMTP host/port to Gmail's settings
+→ Make sure your Zoho account allows SMTP. Generate app password from: Zoho Mail → Settings → Security → App Passwords
 
 **Product images not showing**
-→ Upload product images via Admin → Products. Images are stored in Supabase Storage.
-→ Make sure the `products` storage bucket exists and is set to **Public**
+→ Make sure the `products` storage bucket in Supabase exists and is set to **Public**
 
 **Vercel function timeout**
-→ Free Vercel accounts have a 10-second function timeout. Email-sending operations may be slow.
-→ Upgrade to Vercel Pro for 60-second timeout, or use a dedicated email service like Resend/SendGrid for faster delivery
+→ Free Vercel accounts have a 10-second limit. Email operations can be slow.
+→ Upgrade to Vercel Pro for 60-second timeout, or use Resend/SendGrid for faster email delivery
 
-**Changes not reflecting after redeploy**
-→ Vercel → your project → **Deployments** → click the latest → check build logs for errors
+**Changes not live after redeploy**
+→ Vercel → your project → **Deployments** → click latest → check build logs
