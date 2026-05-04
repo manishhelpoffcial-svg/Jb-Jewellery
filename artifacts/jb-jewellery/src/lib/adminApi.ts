@@ -1,4 +1,5 @@
-const BASE = '/jb-api/sb-admin';
+const _API_ROOT = (import.meta.env.VITE_API_URL as string) || '/jb-api';
+const BASE = `${_API_ROOT}/sb-admin`;
 
 function adminToken(): string {
   return (import.meta.env.VITE_ADMIN_PASSWORD as string) || '';
@@ -239,7 +240,7 @@ async function uploadImage(endpoint: string, file: File): Promise<string> {
     r.onerror = () => reject(new Error('Failed to read file'));
     r.readAsDataURL(file);
   });
-  const r = await fetch(`/jb-api${endpoint}`, {
+  const r = await fetch(`${_API_ROOT}${endpoint}`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -259,7 +260,7 @@ async function uploadImagePublic(endpoint: string, file: File): Promise<string> 
     r.onerror = () => reject(new Error('Could not read file'));
     r.readAsDataURL(file);
   });
-  const r = await fetch(`/jb-api${endpoint}`, {
+  const r = await fetch(`${_API_ROOT}${endpoint}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ base64, filename: file.name, mime: file.type }),
@@ -308,7 +309,7 @@ let _allCatInflight: Promise<AllCatResult> | null = null;
 function fetchAllCategoriesRaw(): Promise<AllCatResult> {
   if (_allCatCache && Date.now() < _allCatCache.expires) return Promise.resolve(_allCatCache.data);
   if (_allCatInflight) return _allCatInflight;
-  _allCatInflight = fetch('/jb-api/categories/all')
+  _allCatInflight = fetch(`${_API_ROOT}/categories/all`)
     .then((r) => { if (!r.ok) throw new Error('Failed to load categories'); return r.json() as Promise<AllCatResult>; })
     .then((data) => {
       _allCatCache = { data, expires: Date.now() + CAT_CACHE_TTL };
@@ -328,7 +329,7 @@ export const categoriesApi = {
     return { categories: (all.byType[type] as SbCategory[]) || [] };
   },
   getBySlug: async (slug: string): Promise<{ category: SbCategory; products: SbProduct[] }> => {
-    const r = await fetch(`/jb-api/categories/${encodeURIComponent(slug)}`);
+    const r = await fetch(`${_API_ROOT}/categories/${encodeURIComponent(slug)}`);
     const data = (await r.json().catch(() => ({}))) as { category?: SbCategory; products?: SbProduct[]; error?: string };
     if (!r.ok || !data.category) throw new Error(data.error || 'Failed to load category');
     return { category: data.category, products: data.products || [] };
@@ -338,7 +339,7 @@ export const categoriesApi = {
 
 // Use direct admin fetch for admin category endpoints (different prefix)
 async function catAdminReq<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const r = await fetch(`/jb-api/categories${path}`, {
+  const r = await fetch(`${_API_ROOT}/categories${path}`, {
     ...init,
     headers: {
       'content-type': 'application/json',
@@ -379,12 +380,12 @@ export interface CustomerReviewSubmission {
 
 export const customerReviewsApi = {
   listForProduct: async (productId: string): Promise<{ reviews: SbProductReview[] }> => {
-    const r = await fetch(`/jb-api/product-reviews/product/${encodeURIComponent(productId)}`);
+    const r = await fetch(`${_API_ROOT}/product-reviews/product/${encodeURIComponent(productId)}`);
     if (!r.ok) throw new Error('Failed to load reviews');
     return r.json();
   },
   submit: async (body: CustomerReviewSubmission): Promise<{ review: SbProductReview }> => {
-    const r = await fetch('/jb-api/product-reviews', {
+    const r = await fetch(`${_API_ROOT}/product-reviews`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
@@ -398,12 +399,12 @@ export const customerReviewsApi = {
 // ── Site settings ────────────────────────────────────────────────────────────
 export const settingsApi = {
   get: async (): Promise<{ settings: Record<string, unknown>; updated_at: string | null }> => {
-    const r = await fetch('/jb-api/site-settings');
+    const r = await fetch(`${_API_ROOT}/site-settings`);
     if (!r.ok) throw new Error('Failed to load site settings');
     return r.json();
   },
   save: async (settings: Record<string, unknown>) => {
-    const r = await fetch('/jb-api/site-settings', {
+    const r = await fetch(`${_API_ROOT}/site-settings`, {
       method: 'PUT',
       headers: {
         'content-type': 'application/json',
@@ -419,7 +420,7 @@ export const settingsApi = {
 
 // ── Product reviews (admin) ──────────────────────────────────────────────────
 async function adminReviewReq<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const r = await fetch(`/jb-api/product-reviews${path}`, {
+  const r = await fetch(`${_API_ROOT}/product-reviews${path}`, {
     ...init,
     headers: {
       'content-type': 'application/json',
@@ -446,7 +447,7 @@ export const productReviewsApi = {
 
 // ── Email Templates (admin) ─────────────────────────────────────────────────
 async function emailReq<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const r = await fetch(`/jb-api/admin/email-templates${path}`, {
+  const r = await fetch(`${_API_ROOT}/admin/email-templates${path}`, {
     ...init,
     headers: {
       'content-type': 'application/json',
@@ -487,7 +488,7 @@ export async function uploadBrandAsset(file: File, kind: 'logo' | 'signature' = 
     r.onerror = () => reject(new Error('Could not read file'));
     r.readAsDataURL(file);
   });
-  const res = await fetch('/jb-api/uploads/brand-asset', {
+  const res = await fetch(`${_API_ROOT}/uploads/brand-asset`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -538,7 +539,7 @@ export type InvoiceInput = {
 };
 
 async function invoiceReq<T>(path: string, body: unknown): Promise<T> {
-  const r = await fetch(`/jb-api/admin/invoices${path}`, {
+  const r = await fetch(`${_API_ROOT}/admin/invoices${path}`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',

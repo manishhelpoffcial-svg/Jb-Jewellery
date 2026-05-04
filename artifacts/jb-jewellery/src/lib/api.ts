@@ -1,4 +1,4 @@
-const BASE = '/jb-api';
+const BASE = (import.meta.env.VITE_API_URL as string) || '/jb-api';
 
 function getToken(): string | null {
   return localStorage.getItem('jb-token');
