@@ -1,12 +1,18 @@
 {
-  "buildCommand": "pnpm install && pnpm --filter @workspace/jb-jewellery run build",
+  "buildCommand": "pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/jb-jewellery run build",
   "outputDirectory": "artifacts/jb-jewellery/dist/public",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
+  "functions": {
+    "api/[[...path]].mjs": {
+      "runtime": "@vercel/node@5",
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/jb-api/:path*",
-      "destination": "https://REPLACE_WITH_YOUR_RAILWAY_URL/api/:path*"
+      "destination": "/api/:path*"
     },
     {
       "source": "/(.*)",
