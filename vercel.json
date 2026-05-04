@@ -1,6 +1,6 @@
 {
   "buildCommand": "pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/jb-jewellery run build",
-  "outputDirectory": "artifacts/jb-jewellery/dist/public",
+  "outputDirectory": "artifacts/jb-jewellery/dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
   "functions": {
