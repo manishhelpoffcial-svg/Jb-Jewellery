@@ -119,8 +119,13 @@ async function buildAll() {
   });
 
   // Build 2: serverless handler (used by Vercel — exports app without listen)
+  // nodemailer + handlebars are bundled in (not external) so dist/handler.mjs is fully self-contained
+  const handlerExternal = sharedConfig.external.filter(
+    (e) => e !== "nodemailer" && e !== "handlebars"
+  );
   await esbuild({
     ...sharedConfig,
+    external: handlerExternal,
     entryPoints: [path.resolve(artifactDir, "src/handler.ts")],
     sourcemap: false,
   });
