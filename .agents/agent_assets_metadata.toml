@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "gwB8JtdK4JkT0SKmhevr7"
+uri = "file://DEPLOYMENT_GUIDE.md"
+type = "text"
+title = "JB Jewellery — Complete Production Deployment Guide"
