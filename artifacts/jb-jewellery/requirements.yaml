@@ -1,0 +1,11 @@
+packages:
+  "embla-carousel-react": "For the hero banner slider"
+  "embla-carousel-autoplay": "For auto-sliding the hero banner"
+  "framer-motion": "For smooth cart drawer animations and page transitions"
+  "clsx": "For conditional class names"
+  "tailwind-merge": "For conditional class names"
+
+notes:
+  - Frontend only e-commerce store with hardcoded products.
+  - Using Context API for Cart and Wishlist state management.
+  - Cart checkout routes directly to WhatsApp API.

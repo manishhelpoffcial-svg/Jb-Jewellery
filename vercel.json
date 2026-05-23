@@ -1,0 +1,29 @@
+{
+  "buildCommand": "pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/jb-jewellery run build",
+  "outputDirectory": "artifacts/jb-jewellery/dist",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": null,
+  "functions": {
+    "api/[[...path]].mjs": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/jb-api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}
