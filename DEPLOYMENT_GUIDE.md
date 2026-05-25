@@ -213,7 +213,7 @@ Go to: Project → Settings → Environment Variables
 Add all of these for the **Production** environment:
 
 ```
-VITE_API_URL                      = https://api.yourdomain.com
+VITE_API_URL                      = https://api.yourdomain.com/api
 VITE_SUPABASE_URL                 = https://[YOUR-PROJECT-REF].supabase.co
 VITE_SUPABASE_ANON_KEY            = eyJ... (your anon/public key)
 VITE_FIREBASE_API_KEY             = (your Firebase API key, if using Firebase Auth)
@@ -686,9 +686,9 @@ These are set in the Vercel dashboard, not in a file. For local development, cre
 ```bash
 # ─── API ─────────────────────────────────────────────────────────────
 # Development:
-VITE_API_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8080/api
 # Production (set in Vercel dashboard):
-# VITE_API_URL=https://api.yourdomain.com
+# VITE_API_URL=https://api.yourdomain.com/api
 
 # ─── SUPABASE (public — safe to expose) ──────────────────────────────
 VITE_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
@@ -1228,7 +1228,7 @@ Run through this before announcing your site is live.
 - [ ] Root directory set to `artifacts/jb-jewellery`
 - [ ] Build command and output directory correct
 - [ ] All `VITE_` environment variables set in Vercel dashboard
-- [ ] `VITE_API_URL` = `https://api.yourdomain.com`
+- [ ] `VITE_API_URL` = `https://api.yourdomain.com/api`  ← must include `/api`
 - [ ] Custom domain (`www.yourdomain.com`) connected and verified
 - [ ] Deployment completes without build errors
 - [ ] Site loads at `https://www.yourdomain.com`
