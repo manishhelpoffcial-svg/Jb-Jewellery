@@ -5,8 +5,6 @@ import { ProfileLayout } from '@/components/profile/ProfileLayout';
 import { getAllOrders, Order, openWhatsApp } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import jsPDF from 'jspdf';
-
 const TIMELINE = [
   { status: 'pending', icon: CheckCircle, label: 'Order Placed' },
   { status: 'confirmed', icon: CheckCircle, label: 'Order Confirmed' },
@@ -30,8 +28,9 @@ export default function ProfileOrderDetail() {
     });
   }, [params?.id]);
 
-  const downloadInvoice = () => {
+  const downloadInvoice = async () => {
     if (!order) return;
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);

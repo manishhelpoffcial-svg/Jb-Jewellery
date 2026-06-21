@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf';
+import type jsPDFType from 'jspdf';
 import type { Order } from './orders';
 import { adminApi } from './adminApi';
 
@@ -23,7 +23,8 @@ function formatDate(iso: string) {
  * Build a beautiful, print-ready A4 invoice using jsPDF.
  * Uses gold/black branding; no images so it works offline & is small.
  */
-export function buildInvoicePdf(order: Order): jsPDF {
+export async function buildInvoicePdf(order: Order): Promise<jsPDFType> {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -223,14 +224,14 @@ export function buildInvoicePdf(order: Order): jsPDF {
 }
 
 /** Trigger a browser download of the invoice PDF. */
-export function downloadInvoicePdf(order: Order) {
-  const doc = buildInvoicePdf(order);
+export async function downloadInvoicePdf(order: Order) {
+  const doc = await buildInvoicePdf(order);
   doc.save(`JB-Invoice-${order.orderId}.pdf`);
 }
 
 /** Open the invoice in a new tab styled for printing. */
-export function printInvoice(order: Order) {
-  const doc = buildInvoicePdf(order);
+export async function printInvoice(order: Order) {
+  const doc = await buildInvoicePdf(order);
   const blobUrl = doc.output('bloburl');
   const win = window.open(blobUrl, '_blank');
   if (win) {
@@ -250,7 +251,7 @@ export function printInvoice(order: Order) {
  *  Silently no-ops if the admin token isn't available client-side. */
 export async function uploadInvoiceToStorage(order: Order): Promise<string | null> {
   try {
-    const doc = buildInvoicePdf(order);
+    const doc = await buildInvoicePdf(order);
     // datauristring → strip "data:application/pdf;filename=...;base64,"
     const dataUri = doc.output('datauristring');
     const base64 = dataUri.split(',')[1] || '';

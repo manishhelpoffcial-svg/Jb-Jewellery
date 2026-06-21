@@ -4,8 +4,6 @@ import { CheckCircle, Download, MessageCircle, Package, ArrowRight } from 'lucid
 import { Link } from 'wouter';
 import { getAllLocalOrders, Order, buildWhatsAppMessage, openWhatsApp } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
-import jsPDF from 'jspdf';
-
 export default function OrderSuccess() {
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get('orderId') || '';
@@ -17,8 +15,9 @@ export default function OrderSuccess() {
     if (found) setOrder(found);
   }, [orderId]);
 
-  const downloadInvoice = () => {
+  const downloadInvoice = async () => {
     if (!order) return;
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
 

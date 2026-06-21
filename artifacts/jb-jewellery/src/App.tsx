@@ -9,20 +9,30 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { SiteSettingsProvider } from "@/context/SiteSettingsContext";
 
-class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; errorMsg: string }> {
   constructor(props: { children: ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorMsg: '' };
   }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error: unknown) { console.error('[JB ErrorBoundary]', error); }
+  static getDerivedStateFromError(error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    return { hasError: true, errorMsg: msg };
+  }
+  componentDidCatch(error: unknown, info: unknown) {
+    console.error('[JB ErrorBoundary]', error, info);
+  }
   render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 bg-white">
           <h1 className="text-2xl font-black text-black">Something went wrong</h1>
           <p className="text-gray-500 text-sm text-center max-w-sm">We hit an unexpected error. Please refresh the page or go back to continue shopping.</p>
-          <button onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }} className="px-6 py-3 bg-yellow-400 text-black font-bold rounded-full hover:bg-yellow-500 transition-all">
+          {this.state.errorMsg && (
+            <pre className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 max-w-md overflow-auto whitespace-pre-wrap text-left">
+              {this.state.errorMsg}
+            </pre>
+          )}
+          <button onClick={() => { this.setState({ hasError: false, errorMsg: '' }); window.location.href = '/'; }} className="px-6 py-3 bg-yellow-400 text-black font-bold rounded-full hover:bg-yellow-500 transition-all">
             Go to Home
           </button>
         </div>

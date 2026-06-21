@@ -6,8 +6,6 @@ import { getAllOrders, Order, updateOrderStatus } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import jsPDF from 'jspdf';
-
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
   pending:    { label: 'Pending',    color: 'text-yellow-700', bg: 'bg-yellow-50',  dot: 'bg-yellow-400' },
   confirmed:  { label: 'Confirmed',  color: 'text-blue-700',   bg: 'bg-blue-50',    dot: 'bg-blue-500' },
@@ -43,7 +41,8 @@ export default function ProfileOrders() {
     return matchDate && matchSearch;
   });
 
-  const downloadInvoice = (o: Order) => {
+  const downloadInvoice = async (o: Order) => {
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
