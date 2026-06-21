@@ -1,10 +1,4 @@
-modules = ["nodejs-24", "postgresql-16"]
-
-[[artifacts]]
-id = "artifacts/api-server"
-
-[[artifacts]]
-id = "artifacts/mockup-sandbox"
+modules = ["nodejs-20", "web"]
 
 [deployment]
 router = "application"
@@ -15,6 +9,7 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
+runButton = "Project"
 
 [agent]
 stack = "PNPM_WORKSPACE"
@@ -24,24 +19,25 @@ expertMode = true
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
 
-[userenv]
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
-[userenv.shared]
-VITE_FIREBASE_API_KEY = "AIzaSyAQta3YKiao4_2JD5oLF4_IfL75h83scAY"
-VITE_FIREBASE_AUTH_DOMAIN = "jb-jewellery.firebaseapp.com"
-VITE_FIREBASE_PROJECT_ID = "jb-jewellery"
-VITE_FIREBASE_STORAGE_BUCKET = "jb-jewellery.firebasestorage.app"
-VITE_FIREBASE_MESSAGING_SENDER_ID = "350196066764"
-VITE_FIREBASE_APP_ID = "1:350196066764:web:2599ec34c09a476ae51569"
-VITE_FIREBASE_MEASUREMENT_ID = "G-CSE46DXRRG"
-VITE_SUPABASE_URL = "https://glpsidmtigfepgowliia.supabase.co"
-VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscHNpZG10aWdmZXBnb3dsaWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.DSPbzbud6h5PxPc0KvrZeb_FbMg4r5gwzY9FhsXbNpE"
-SUPABASE_URL = "https://glpsidmtigfepgowliia.supabase.co"
-SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscHNpZG10aWdmZXBnb3dsaWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.DSPbzbud6h5PxPc0KvrZeb_FbMg4r5gwzY9FhsXbNpE"
-VITE_ADMIN_EMAIL = "amritabiswas7432@gmail.com"
-VITE_ADMIN_PASSWORD = "admin123"
-VITE_ADMIN_NAME = "admin"
-ZOHO_EMAIL = "manish@grafxcore.in"
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 8082
+externalPort = 3002
+
+[[ports]]
+localPort = 26210
+externalPort = 80
+
+[[ports]]
+localPort = 26211
+externalPort = 3001
 
 [nix]
 channel = "stable-25_05"

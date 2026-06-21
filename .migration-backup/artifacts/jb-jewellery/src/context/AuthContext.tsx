@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, setRememberMe } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, setRememberMe } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
 export interface JBUser {
@@ -50,7 +50,7 @@ interface ProfileRow {
 }
 
 async function loadProfile(session: Session | null): Promise<JBUser | null> {
-  if (!session?.user) return null;
+  if (!session?.user || !isSupabaseConfigured) return null;
   const u = session.user;
   const { data, error } = await supabase
     .from('profiles')
@@ -86,6 +86,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authModalTab, setAuthModalTab] = useState<'login' | 'signup'>('login');
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
     let loadingCleared = false;
 
@@ -96,7 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Safety net: never stay in loading state longer than 8 seconds
     const safetyTimer = setTimeout(clearLoading, 8000);
 
     supabase.auth.getSession()
@@ -130,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
   const login = async (email: string, password: string, remember = true) => {
+    if (!isSupabaseConfigured) throw new Error('Auth not configured. Running in demo mode.');
     setRememberMe(remember);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
@@ -143,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     remember = true,
     address?: SignupAddress,
   ) => {
+    if (!isSupabaseConfigured) throw new Error('Auth not configured. Running in demo mode.');
     setRememberMe(remember);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -185,27 +191,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Auto-login after signup. If a session was returned from signUp
-    // (email confirmation disabled), we're already signed in. Otherwise
-    // try signing in with the same credentials.
     if (!data.session) {
       const { error: signInErr } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (signInErr) {
-        // Most likely "Email not confirmed" — surface to caller.
         throw new Error(signInErr.message);
       }
     }
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured) await supabase.auth.signOut();
     setUser(null);
   };
 
   const resetPassword = async (email: string) => {
+    if (!isSupabaseConfigured) throw new Error('Auth not configured. Running in demo mode.');
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/`,
     });
