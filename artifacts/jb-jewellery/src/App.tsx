@@ -1,6 +1,6 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Component, ReactNode } from "react";
+import { Component, ReactNode, lazy, Suspense } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import { AdminAuthProvider, RequireAdmin } from "@/context/AdminAuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -42,81 +42,91 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Checkout from "./pages/Checkout";
-import OrderSuccess from "./pages/OrderSuccess";
-import MyOrders from "./pages/MyOrders";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminCustomers from "./pages/admin/AdminCustomers";
-import AdminCoupons from "./pages/admin/AdminCoupons";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminProductReviews from "./pages/admin/AdminProductReviews";
-import AdminCategories from "./pages/admin/AdminCategories";
-import AdminEmail from "./pages/admin/AdminEmail";
-import AdminCreateInvoice from "./pages/admin/AdminCreateInvoice";
-import CategoryPage from "./pages/CategoryPage";
 import NotFound from "./pages/not-found";
 
-import ProfilePage from "./pages/profile/ProfilePage";
-import ProfileOrders from "./pages/profile/ProfileOrders";
-import ProfileOrderDetail from "./pages/profile/ProfileOrderDetail";
-import ProfileAddresses from "./pages/profile/ProfileAddresses";
-import ProfileWishlist from "./pages/profile/ProfileWishlist";
-import ProfileReviews from "./pages/profile/ProfileReviews";
-import ProfileCoupons from "./pages/profile/ProfileCoupons";
-import ProfileRecently from "./pages/profile/ProfileRecently";
-import ProfileNotifications from "./pages/profile/ProfileNotifications";
-import ProfilePassword from "./pages/profile/ProfilePassword";
-import ProfileHelp from "./pages/profile/ProfileHelp";
-import ProfileReturns from "./pages/profile/ProfileReturns";
-import ProfilePayments from "./pages/profile/ProfilePayments";
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
+const MyOrders = lazy(() => import("./pages/MyOrders"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
+const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminProductReviews = lazy(() => import("./pages/admin/AdminProductReviews"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
+const AdminCreateInvoice = lazy(() => import("./pages/admin/AdminCreateInvoice"));
+
+const ProfilePage = lazy(() => import("./pages/profile/ProfilePage"));
+const ProfileOrders = lazy(() => import("./pages/profile/ProfileOrders"));
+const ProfileOrderDetail = lazy(() => import("./pages/profile/ProfileOrderDetail"));
+const ProfileAddresses = lazy(() => import("./pages/profile/ProfileAddresses"));
+const ProfileWishlist = lazy(() => import("./pages/profile/ProfileWishlist"));
+const ProfileReviews = lazy(() => import("./pages/profile/ProfileReviews"));
+const ProfileCoupons = lazy(() => import("./pages/profile/ProfileCoupons"));
+const ProfileRecently = lazy(() => import("./pages/profile/ProfileRecently"));
+const ProfileNotifications = lazy(() => import("./pages/profile/ProfileNotifications"));
+const ProfilePassword = lazy(() => import("./pages/profile/ProfilePassword"));
+const ProfileHelp = lazy(() => import("./pages/profile/ProfileHelp"));
+const ProfileReturns = lazy(() => import("./pages/profile/ProfileReturns"));
+const ProfilePayments = lazy(() => import("./pages/profile/ProfilePayments"));
 
 const queryClient = new QueryClient();
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/products" component={Products} />
-      <Route path="/checkout" component={Checkout} />
-      <Route path="/order-success" component={OrderSuccess} />
-      <Route path="/my-orders" component={MyOrders} />
-      <Route path="/category/:slug" component={CategoryPage} />
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/products" component={Products} />
+        <Route path="/checkout" component={Checkout} />
+        <Route path="/order-success" component={OrderSuccess} />
+        <Route path="/my-orders" component={MyOrders} />
+        <Route path="/category/:slug" component={CategoryPage} />
 
-      {/* Profile Section */}
-      <Route path="/profile" component={ProfilePage} />
-      <Route path="/profile/orders" component={ProfileOrders} />
-      <Route path="/profile/orders/:id" component={ProfileOrderDetail} />
-      <Route path="/profile/addresses" component={ProfileAddresses} />
-      <Route path="/profile/wishlist" component={ProfileWishlist} />
-      <Route path="/profile/reviews" component={ProfileReviews} />
-      <Route path="/profile/coupons" component={ProfileCoupons} />
-      <Route path="/profile/recently" component={ProfileRecently} />
-      <Route path="/profile/notifications" component={ProfileNotifications} />
-      <Route path="/profile/returns" component={ProfileReturns} />
-      <Route path="/profile/payments" component={ProfilePayments} />
-      <Route path="/profile/password" component={ProfilePassword} />
-      <Route path="/profile/help" component={ProfileHelp} />
+        <Route path="/profile" component={ProfilePage} />
+        <Route path="/profile/orders" component={ProfileOrders} />
+        <Route path="/profile/orders/:id" component={ProfileOrderDetail} />
+        <Route path="/profile/addresses" component={ProfileAddresses} />
+        <Route path="/profile/wishlist" component={ProfileWishlist} />
+        <Route path="/profile/reviews" component={ProfileReviews} />
+        <Route path="/profile/coupons" component={ProfileCoupons} />
+        <Route path="/profile/recently" component={ProfileRecently} />
+        <Route path="/profile/notifications" component={ProfileNotifications} />
+        <Route path="/profile/returns" component={ProfileReturns} />
+        <Route path="/profile/payments" component={ProfilePayments} />
+        <Route path="/profile/password" component={ProfilePassword} />
+        <Route path="/profile/help" component={ProfileHelp} />
 
-      {/* Admin Section */}
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/orders">{() => <RequireAdmin><AdminOrders /></RequireAdmin>}</Route>
-      <Route path="/admin/products">{() => <RequireAdmin><AdminProducts /></RequireAdmin>}</Route>
-      <Route path="/admin/customers">{() => <RequireAdmin><AdminCustomers /></RequireAdmin>}</Route>
-      <Route path="/admin/coupons">{() => <RequireAdmin><AdminCoupons /></RequireAdmin>}</Route>
-      <Route path="/admin/settings">{() => <RequireAdmin><AdminSettings /></RequireAdmin>}</Route>
-      <Route path="/admin/reviews">{() => <RequireAdmin><AdminProductReviews /></RequireAdmin>}</Route>
-      <Route path="/admin/categories">{() => <RequireAdmin><AdminCategories /></RequireAdmin>}</Route>
-      <Route path="/admin/email">{() => <RequireAdmin><AdminEmail /></RequireAdmin>}</Route>
-      <Route path="/admin/invoices/new">{() => <RequireAdmin><AdminCreateInvoice /></RequireAdmin>}</Route>
-      <Route path="/admin">{() => <RequireAdmin><AdminDashboard /></RequireAdmin>}</Route>
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin/orders">{() => <RequireAdmin><AdminOrders /></RequireAdmin>}</Route>
+        <Route path="/admin/products">{() => <RequireAdmin><AdminProducts /></RequireAdmin>}</Route>
+        <Route path="/admin/customers">{() => <RequireAdmin><AdminCustomers /></RequireAdmin>}</Route>
+        <Route path="/admin/coupons">{() => <RequireAdmin><AdminCoupons /></RequireAdmin>}</Route>
+        <Route path="/admin/settings">{() => <RequireAdmin><AdminSettings /></RequireAdmin>}</Route>
+        <Route path="/admin/reviews">{() => <RequireAdmin><AdminProductReviews /></RequireAdmin>}</Route>
+        <Route path="/admin/categories">{() => <RequireAdmin><AdminCategories /></RequireAdmin>}</Route>
+        <Route path="/admin/email">{() => <RequireAdmin><AdminEmail /></RequireAdmin>}</Route>
+        <Route path="/admin/invoices/new">{() => <RequireAdmin><AdminCreateInvoice /></RequireAdmin>}</Route>
+        <Route path="/admin">{() => <RequireAdmin><AdminDashboard /></RequireAdmin>}</Route>
 
-      <Route component={NotFound} />
-    </Switch>
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
