@@ -1,8 +1,8 @@
 {
   "framework": null,
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm --filter @workspace/jb-jewellery run build",
-  "outputDirectory": "artifacts/jb-jewellery/dist",
+  "buildCommand": "pnpm --filter @workspace/jb-jewellery run build && cp -r artifacts/jb-jewellery/dist/. dist/",
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
