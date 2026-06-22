@@ -34,12 +34,17 @@ export default function AdminDashboard() {
 
   useEffect(() => { reload(); }, []);
 
+  const s = data?.stats ?? { total_orders: 0, pending_orders: 0, total_revenue: 0, customer_count: 0, product_count: 0, coupon_count: 0 };
+  const chart7d = data?.chart_7d ?? [];
+  const statusBreakdown = data?.status_breakdown ?? {};
+  const recentOrders = data?.recent_orders ?? [];
+
   const stats = data
     ? [
-        { icon: Package, label: 'Total Orders', value: data.stats.total_orders, sub: `${data.stats.pending_orders} pending`, color: 'bg-yellow-100 text-yellow-700' },
-        { icon: TrendingUp, label: 'Total Revenue', value: formatPrice(data.stats.total_revenue), sub: 'All time', color: 'bg-green-100 text-green-700' },
-        { icon: Users, label: 'Customers', value: data.stats.customer_count, sub: 'Registered users', color: 'bg-blue-100 text-blue-700' },
-        { icon: ShoppingBag, label: 'Products', value: data.stats.product_count, sub: `${data.stats.coupon_count} active coupons`, color: 'bg-purple-100 text-purple-700' },
+        { icon: Package, label: 'Total Orders', value: s.total_orders, sub: `${s.pending_orders} pending`, color: 'bg-yellow-100 text-yellow-700' },
+        { icon: TrendingUp, label: 'Total Revenue', value: formatPrice(s.total_revenue), sub: 'All time', color: 'bg-green-100 text-green-700' },
+        { icon: Users, label: 'Customers', value: s.customer_count, sub: 'Registered users', color: 'bg-blue-100 text-blue-700' },
+        { icon: ShoppingBag, label: 'Products', value: s.product_count, sub: `${s.coupon_count} active coupons`, color: 'bg-purple-100 text-purple-700' },
       ]
     : [];
 
@@ -86,7 +91,7 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h2 className="font-bold text-gray-900 mb-4">Revenue — Last 7 Days</h2>
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={data.chart_7d} barSize={28}>
+                  <BarChart data={chart7d} barSize={28}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v}`} />
@@ -99,8 +104,8 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h2 className="font-bold text-gray-900 mb-4">Order Status Breakdown</h2>
                 {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
-                  const count = data.status_breakdown[key] || 0;
-                  const total = data.stats.total_orders || 1;
+                  const count = statusBreakdown[key] || 0;
+                  const total = s.total_orders || 1;
                   const pct = Math.round((count / total) * 100);
                   return (
                     <div key={key} className="flex items-center gap-3 mb-3">
@@ -120,7 +125,7 @@ export default function AdminDashboard() {
                 <h2 className="font-bold text-gray-900">Recent Orders</h2>
                 <Link href="/admin/orders" className="text-xs text-primary font-semibold hover:underline">View All →</Link>
               </div>
-              {data.recent_orders.length === 0 ? (
+              {recentOrders.length === 0 ? (
                 <div className="p-12 text-center text-gray-400">
                   <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p className="font-medium">No orders yet.</p>
@@ -137,7 +142,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {data.recent_orders.map((o) => {
+                      {recentOrders.map((o) => {
                         const cfg = STATUS_CONFIG[o.status] || STATUS_CONFIG.pending;
                         return (
                           <tr key={o.id} className="hover:bg-gray-50 transition-colors">
