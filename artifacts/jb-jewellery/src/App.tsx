@@ -70,6 +70,7 @@ const AdminProductReviews = lazy(() => import("./pages/admin/AdminProductReviews
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
 const AdminCreateInvoice = lazy(() => import("./pages/admin/AdminCreateInvoice"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 
 const ProfilePage = lazy(() => import("./pages/profile/ProfilePage"));
 const ProfileOrders = lazy(() => import("./pages/profile/ProfileOrders"));
@@ -122,6 +123,7 @@ function Router() {
         <Route path="/admin/categories">{() => <RequireAdmin><AdminCategories /></RequireAdmin>}</Route>
         <Route path="/admin/email">{() => <RequireAdmin><AdminEmail /></RequireAdmin>}</Route>
         <Route path="/admin/invoices/new">{() => <RequireAdmin><AdminCreateInvoice /></RequireAdmin>}</Route>
+        <Route path="/admin/analytics">{() => <RequireAdmin><AdminAnalytics /></RequireAdmin>}</Route>
         <Route path="/admin">{() => <RequireAdmin><AdminDashboard /></RequireAdmin>}</Route>
 
         <Route component={NotFound} />
