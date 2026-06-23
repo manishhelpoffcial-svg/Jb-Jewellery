@@ -6,6 +6,28 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+const ALLOWED_ORIGINS = [
+  "https://jbjewellery.in",
+  "https://www.jbjewellery.in",
+  "https://jb-jewellery.vercel.app",
+  /\.vercel\.app$/,
+  /localhost/,
+  /127\.0\.0\.1/,
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const allowed = ALLOWED_ORIGINS.some((o) =>
+        typeof o === "string" ? o === origin : o.test(origin),
+      );
+      callback(null, allowed ? origin : false);
+    },
+    credentials: true,
+  }),
+);
+
 app.use(
   pinoHttp({
     logger,
@@ -25,7 +47,6 @@ app.use(
     },
   }),
 );
-app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true, limit: "12mb" }));
 

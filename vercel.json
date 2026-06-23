@@ -4,6 +4,7 @@
   "buildCommand": "pnpm --filter @workspace/jb-jewellery run build && cp -r artifacts/jb-jewellery/dist/. dist/",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/jb-api/:path*", "destination": "https://api.jbjewellery.in/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
