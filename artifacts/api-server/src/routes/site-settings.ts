@@ -24,7 +24,9 @@ router.get("/", async (_req: Request, res: Response) => {
     if (error) throw error;
     res.json({ settings: data?.data || {}, updated_at: data?.updated_at || null });
   } catch (err: unknown) {
-    res.status(500).json({ error: err instanceof Error ? err.message : "Failed to load settings" });
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('[site-settings GET]', msg, err);
+    res.status(500).json({ error: msg });
   }
 });
 
