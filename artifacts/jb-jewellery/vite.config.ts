@@ -56,11 +56,18 @@ export default defineConfig({
   },
   server: {
     port,
-    strictPort: true,
+    strictPort: false,
     host: "0.0.0.0",
     allowedHosts: true,
     fs: {
       strict: true,
+    },
+    proxy: {
+      '/jb-api': {
+        target: `http://localhost:${process.env.API_PORT || 8080}`,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/jb-api/, '/api'),
+      },
     },
   },
   preview: {
