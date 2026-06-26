@@ -8,6 +8,7 @@ import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { SiteSettingsProvider } from "@/context/SiteSettingsContext";
+import { Analytics } from '@vercel/analytics/react';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; errorMsg: string }> {
   constructor(props: { children: ReactNode }) {
@@ -152,6 +153,7 @@ function App() {
           </AuthProvider>
         </SiteSettingsProvider>
       </QueryClientProvider>
+      <Analytics />
     </ErrorBoundary>
   );
 }
