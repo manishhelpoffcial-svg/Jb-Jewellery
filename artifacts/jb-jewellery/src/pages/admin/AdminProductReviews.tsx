@@ -53,12 +53,12 @@ export default function AdminProductReviews() {
   const reload = async () => {
     setLoading(true);
     try {
-      const [{ reviews }, { products }] = await Promise.all([
+      const [{ reviews: revList }, { products: prodList }] = await Promise.all([
         productReviewsApi.list(),
         adminApi.listProducts(),
       ]);
-      setReviews(reviews);
-      setProducts(products);
+      setReviews(revList ?? []);
+      setProducts(prodList ?? []);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to load', 'error');
     } finally {
@@ -219,7 +219,7 @@ export default function AdminProductReviews() {
                   <div className="flex items-start gap-4">
                     {/* Avatar */}
                     <div className="w-11 h-11 rounded-full bg-primary/20 flex items-center justify-center font-black text-sm shrink-0">
-                      {r.customer_initial || r.customer_name.charAt(0).toUpperCase()}
+                      {r.customer_initial || (r.customer_name || '?').charAt(0).toUpperCase()}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -272,9 +272,9 @@ export default function AdminProductReviews() {
                         <p className="text-sm text-gray-700 mt-2 leading-relaxed">{r.review_text}</p>
                       )}
 
-                      {r.images.length > 0 && (
+                      {(r.images || []).length > 0 && (
                         <div className="flex gap-2 mt-3">
-                          {r.images.map((url, i) => (
+                          {(r.images || []).map((url, i) => (
                             <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-primary transition-colors">
                               <img src={url} alt={`review ${i + 1}`} className="w-full h-full object-cover" />
                             </a>

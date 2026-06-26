@@ -325,6 +325,8 @@ router.post("/products", async (req: Request, res: Response) => {
   try {
     const b = req.body as Record<string, unknown>;
     const id = (b["id"] as string) || `prod-${Date.now()}`;
+    const rawImages = b["images"];
+    const images = Array.isArray(rawImages) ? rawImages.filter(Boolean) : [];
     const row = {
       id,
       name: b["name"],
@@ -334,7 +336,8 @@ router.post("/products", async (req: Request, res: Response) => {
       discount: Number(b["discount"] ?? 0),
       rating: Number(b["rating"] ?? 4.5),
       reviews: Number(b["reviews"] ?? 0),
-      image: (b["image"] as string) || null,
+      image: (b["image"] as string) || images[0] || null,
+      images,
       is_new: Boolean(b["is_new"] ?? b["isNew"] ?? false),
       is_bestseller: Boolean(b["is_bestseller"] ?? b["isBestseller"] ?? false),
       stock: Number(b["stock"] ?? 100),
@@ -366,12 +369,22 @@ router.patch("/products/:id", async (req: Request, res: Response) => {
     if (b["rating"] !== undefined) patch["rating"] = Number(b["rating"]);
     if (b["reviews"] !== undefined) patch["reviews"] = Number(b["reviews"]);
     if (b["image"] !== undefined) patch["image"] = b["image"];
+    if (b["images"] !== undefined) {
+      const rawImages = b["images"];
+      const cleanImages = Array.isArray(rawImages) ? rawImages.filter(Boolean) : [];
+      patch["images"] = cleanImages;
+      // always sync legacy image with first element (or null when list is cleared)
+      if (b["image"] === undefined) {
+        patch["image"] = cleanImages.length > 0 ? cleanImages[0] : null;
+      }
+    }
     if (b["is_new"] !== undefined || b["isNew"] !== undefined)
       patch["is_new"] = Boolean(b["is_new"] ?? b["isNew"]);
     if (b["is_bestseller"] !== undefined || b["isBestseller"] !== undefined)
       patch["is_bestseller"] = Boolean(b["is_bestseller"] ?? b["isBestseller"]);
     if (b["stock"] !== undefined) patch["stock"] = Number(b["stock"]);
     if (b["description"] !== undefined) patch["description"] = b["description"];
+    patch["updated_at"] = new Date().toISOString();
     const { data, error } = await supabaseAdmin
       .from("products")
       .update(patch)

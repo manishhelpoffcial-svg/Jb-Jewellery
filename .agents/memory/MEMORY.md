@@ -1,2 +1,3 @@
 - [JB Jewellery secrets](jb-secrets.md) — all 6 env vars needed for the app to work; Supabase schema must be applied first
 - [JB Jewellery API routing](jb-api-routing.md) — Vite proxies /jb-api → /api on the Express server; strictPort caused crashes
+- [JB Jewellery null-safety crashes](jb-null-safety.md) — admin pages crashed on undefined .length/.filter/.map; root causes and fixes documented

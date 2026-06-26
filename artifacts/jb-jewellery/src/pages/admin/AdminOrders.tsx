@@ -152,10 +152,10 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
             {/* Items */}
             <div>
               <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-3">
-                Items Ordered ({order.items.length})
+                Items Ordered ({(order.items || []).length})
               </p>
               <div className="space-y-2">
-                {(order.items as CartItem[]).map((item, i) => (
+                {((order.items || []) as CartItem[]).map((item, i) => (
                   <div key={`${item.id}-${i}`} className="flex items-center gap-3 bg-gray-50 rounded-2xl p-3">
                     {/* Product image */}
                     <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-[#FFFBE6] to-[#FFF0B3] flex items-center justify-center border border-gray-100">
@@ -256,7 +256,7 @@ export default function AdminOrders() {
   const filtered = orders.filter((o) => {
     const matchesFilter = filter === 'all' || o.status === filter;
     const q = search.toLowerCase();
-    const matchesSearch = !q || o.orderId.toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q) || o.phone.includes(q);
+    const matchesSearch = !q || (o.orderId || '').toLowerCase().includes(q) || (o.customerName || '').toLowerCase().includes(q) || (o.phone || '').includes(q);
     return matchesFilter && matchesSearch;
   });
 
@@ -354,7 +354,7 @@ export default function AdminOrders() {
                           <p className="font-semibold text-gray-800 text-xs">{o.customerName}</p>
                           <p className="text-gray-400 text-[10px]">{o.phone}</p>
                         </td>
-                        <td className="px-4 py-3 text-gray-600 text-xs">{o.items.length} item{o.items.length !== 1 ? 's' : ''}</td>
+                        <td className="px-4 py-3 text-gray-600 text-xs">{(o.items || []).length} item{(o.items || []).length !== 1 ? 's' : ''}</td>
                         <td className="px-4 py-3 font-bold text-xs">{formatPrice(o.grandTotal)}</td>
                         <td className="px-4 py-3">
                           {o.invoiceUrl ? (
